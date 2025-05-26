@@ -1,0 +1,317 @@
+
+{
+  "login": {
+    "title": "Accedi",
+    "description": "Accedi al tuo account",
+    "form": {
+      "username": "Nome utente",
+      "password": "Password",
+      "submit": "Accedi"
+    },
+    "forgot_password": "Password dimenticata?",
+    "signup": {
+      "title": "Registrati",
+      "description": "Questa è una pagina demo per https://github.com/kitloong/nextjs-dashboard. Clicca \"Accedi\" per visualizzare l'anteprima completa del dashboard."
+    },
+    "message": {
+      "auth_failed": "Nome utente o password non validi"
+    }
+  },
+  "pagination": {
+    "summary": "Mostrando da {{from}} a {{to}} di {{total}} risultati",
+    "rows_per_page": "Righe per pagina"
+  },
+  "signup": {
+    "title": "Registrati",
+    "description": "Crea il tuo account",
+    "register_now": "Registrati Ora!",
+    "form": {
+      "username": "Nome utente",
+      "email": "Email",
+      "password": "Password",
+      "confirm_password": "Conferma Password",
+      "submit": "Crea Account"
+    }
+  },
+  "action": {
+    "info": "Info",
+    "edit": "Modifica",
+    "delete": "Elimina",
+    "submit": "Invia",
+    "submitting": "Invio in corso...",
+    "reset": "Reimposta"
+  },
+  "theme": {
+    "light": "Chiaro",
+    "dark": "Scuro",
+    "auto": "Automatico"
+  },
+  "dashboard": {
+    "featured": {
+      "user": "Utenti",
+      "income": "Entrate",
+      "conversion_rate": "Tasso di Conversione",
+      "sessions": "Sessioni",
+      "action": {
+        "action1": "Azione",
+        "action2": "Altra azione",
+        "action3": "Qualcos'altro"
+      }
+    },
+    "traffic": {
+      "title": "Traffico",
+      "duration": "Gennaio - Luglio 2021",
+      "option": {
+        "day": "Giorno",
+        "month": "Mese",
+        "year": "Anno"
+      },
+      "chart": {
+        "xlabel1": "Gennaio",
+        "xlabel2": "Febbraio",
+        "xlabel3": "Marzo",
+        "xlabel4": "Aprile",
+        "xlabel5": "Maggio",
+        "xlabel6": "Giugno",
+        "xlabel7": "Luglio"
+      },
+      "users": "Utenti",
+      "views": "Visualizzazioni",
+      "category1": "Visite",
+      "category2": "Unici",
+      "category3": "Visualizzazioni pagina",
+      "category4": "Nuovi utenti",
+      "category5": "Frequenza di rimbalzo"
+    },
+    "social": {
+      "facebook": {
+        "label1": "Amici",
+        "label2": "Feed"
+      },
+      "twitter": {
+        "label1": "Follower",
+        "label2": "Tweet"
+      },
+      "instagram": {
+        "label1": "Contatti",
+        "label2": "Feed"
+      }
+    },
+    "sales": {
+      "title": "Traffico e Vendite",
+      "stats": {
+        "stat1": "Nuovi Clienti",
+        "stat2": "Clienti Ricorrenti",
+        "stat3": "Visualizzazioni Pagina",
+        "stat4": "Organico"
+      },
+      "monday": "Lunedì",
+      "tuesday": "Martedì",
+      "wednesday": "Mercoledì",
+      "thursday": "Giovedì",
+      "friday": "Venerdì",
+      "saturday": "Sabato",
+      "sunday": "Domenica",
+      "male": "Maschio",
+      "female": "Femmina",
+      "organic": "Ricerca Organica",
+      "facebook": "Facebook",
+      "twitter": "Twitter",
+      "linkedin": "LinkedIn"
+    },
+    "listing": {
+      "headers": {
+        "header1": "Utente",
+        "header2": "Utilizzo",
+        "header3": "Metodo di Pagamento",
+        "header4": "Attività"
+      },
+      "user_status": {
+        "new": "Nuovo",
+        "recurring": "Ricorrente"
+      },
+      "registered": "Registrato",
+      "last_login": "Ultimo accesso",
+      "usage_duration": "11 Giu 2020 - 10 Lug 2020",
+      "registered_at": "1 Gen 2020",
+      "items": {
+        "item1": {
+          "name": "Yiorgos Avraamu",
+          "login_at": "10 sec fa"
+        },
+        "item2": {
+          "name": "Avram Tarasios",
+          "login_at": "5 minuti fa"
+        },
+        "item3": {
+          "name": "Quintin Ed",
+          "login_at": "1 ora fa"
+        },
+        "item4": {
+          "name": "Enéas Kwadwo",
+          "login_at": "Il mese scorso"
+        },
+        "item5": {
+          "name": "Agapetus Tadeáš",
+          "login_at": "La settimana scorsa"
+        },
+        "item6": {
+          "name": "Friderik Dávid",
+          "login_at": "Ieri"
+        }
+      }
+    }
+  },
+  "crea_pass": {
+    "title": "Creazione"
+  },
+  "featured_nav": {
+    "dashboard": "Dashboard",
+    "users": "Utenti",
+    "settings": "Impostazioni"
+  },
+  "notification": {
+    "message": "Hai {{total}} notifiche",
+    "items": {
+      "new_user": "Nuovo utente registrato",
+      "deleted_user": "Utente eliminato",
+      "sales_report": "Report vendite pronto",
+      "new_client": "Nuovo cliente",
+      "server_overloaded": "Server sovraccarico"
+    },
+    "server": {
+      "title": "server",
+      "processes": "Processi",
+      "cores": "Core",
+      "items": {
+        "cpu": "Utilizzo CPU",
+        "memory": "Utilizzo memoria",
+        "ssd1": "Utilizzo SSD 1"
+      }
+    }
+  },
+  "task": {
+    "message": "Hai {{total}} attività in sospeso",
+    "items": {
+      "task1": "Aggiorna Next.JS",
+      "task2": "Allena Pokémon",
+      "task3": "Completa Pokédex",
+      "task4": "Cattura tutti i shiny",
+      "task5": "Batti tutte le palestre"
+    },
+    "view_all": "Visualizza tutte le attività"
+  },
+  "messages": {
+    "message": "Hai {{total}} messaggi",
+    "items": {
+      "item1": {
+        "user": "Mario Rossi",
+        "time": "Proprio ora",
+        "title": "Coccola Pikachu",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt"
+      },
+      "item2": {
+        "user": "Mario Rossi",
+        "time": "5 min fa",
+        "title": "Vesti Eevee",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt"
+      },
+      "item3": {
+        "user": "Mario Rossi",
+        "time": "13:52",
+        "title": "Allenamento di squadra",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt"
+      },
+      "item4": {
+        "user": "Mario Rossi",
+        "time": "16:03",
+        "title": "Vai alla Zona Safari",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt"
+      }
+    }
+  },
+  "profile": {
+    "account": {
+      "title": "Account",
+      "items": {
+        "updates": "Aggiornamenti",
+        "messages": "Messaggi",
+        "tasks": "Attività",
+        "comments": "Commenti"
+      }
+    },
+    "settings": {
+      "title": "Impostazioni",
+      "items": {
+        "profile": "Profilo",
+        "settings": "Impostazioni",
+        "payments": "Pagamenti",
+        "projects": "Progetti"
+      }
+    },
+    "lock_account": "Blocca account",
+    "logout": "Esci"
+  },
+  "breadcrumb": {
+    "home": "Home",
+    "library": "Libreria",
+    "data": "Dati"
+  },
+  "sidebar": {
+    "items": {
+      "dashboard": "Dashboard",
+      "sample": "Esempio",
+      "theme": "Tema",
+      "colors": "Colori",
+      "typography": "Tipografia",
+      "components": "Componenti",
+      "accordion": "Accordion",
+      "breadcrumb": "Breadcrumb",
+      "cards": "Card",
+      "carousel": "Carousel",
+      "collapse": "Collapse",
+      "list_group": "Gruppo lista",
+      "navs": "Navigazione",
+      "pagination": "Paginazione",
+      "popovers": "Popover",
+      "progress": "Progress",
+      "scrollspy": "Scrollspy",
+      "spinners": "Spinner",
+      "tables": "Tabelle",
+      "tabs": "Tab",
+      "tooltips": "Tooltip",
+      "buttons": "Bottoni",
+      "buttons_group": "Gruppo Bottoni",
+      "dropdowns": "Dropdown",
+      "charts": "Grafici",
+      "form_control": "Controlli Form",
+      "select": "Select",
+      "checks_and_radios": "Checkbox e Radio",
+      "range": "Range",
+      "input_group": "Gruppo Input",
+      "floating_labels": "Etichette Fluttuanti",
+      "layout": "Layout",
+      "validation": "Validazione",
+      "core_ui_icons": "Icone CoreUI",
+      "core_ui_icons_brand": "Icone CoreUI - Brand",
+      "core_ui_icons_flag": "Icone CoreUI - Bandiere",
+      "alerts": "Avvisi",
+      "badge": "Badge",
+      "modals": "Modal",
+      "toasts": "Toast",
+      "widgets": "Widget",
+      "login": "Accedi",
+      "register": "Registrati",
+      "error404": "Errore 404",
+      "error500": "Errore 500",
+      "docs": "Documentazione",
+      "try_core_ui_pro": "Prova CoreUI PRO",
+      "base": "Base",
+      "forms": "Form",
+      "icons": "Icone",
+      "notifications": "Notifiche",
+      "extras": "Extra",
+      "pages": "Pagine"
+    }
+  }
+}

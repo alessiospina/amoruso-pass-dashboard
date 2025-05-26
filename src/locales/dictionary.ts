@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { defaultLocale } from '@/locales/config'
 
 const dictionaries = {
+  it: () => import('./it/lang.json').then((module) => module.default),
   en: () => import('./en/lang.json').then((module) => module.default),
   ja: () => import('./ja/lang.json').then((module) => module.default),
   zh: () => import('./zh/lang.json').then((module) => module.default),
