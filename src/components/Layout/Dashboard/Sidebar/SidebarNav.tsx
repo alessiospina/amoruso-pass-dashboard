@@ -36,7 +36,7 @@ export default async function SidebarNav() {
         Dashboard
       </SidebarNavItem>
       <SidebarNavTitle>Gestione Pass</SidebarNavTitle>
-      <SidebarNavItem icon={faGauge} href="/">
+      <SidebarNavItem icon={faPencil} href="/crea">
         Crea
       </SidebarNavItem>
       <SidebarNavItem icon={faGauge} href="/">
