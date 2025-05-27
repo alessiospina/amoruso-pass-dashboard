@@ -1,0 +1,241 @@
+### Automated Test Suite - Amoruso Pass Dashboard
+### Questo file utilizza variabili per test automatizzati
+
+### Environment Variables
+@baseUrl = http://localhost:3000
+@contentType = application/json
+
+### ================================
+### SETUP - Crea ingressi di test
+### ================================
+
+### @name createTestIngresso1
+POST {{baseUrl}}/api/ingressi
+Content-Type: {{contentType}}
+
+{
+  "email": "auto-test-1@amoruso.com",
+  "ragione_sociale": "Auto Test 1 SRL",
+  "targa": "AUTO001",
+  "importo": 25.50
+}
+
+> {%
+  client.test("Create ingresso 1 success", function() {
+    client.assert(response.status === 201, "Response status is 201");
+  });
+  
+  if (response.status === 201) {
+    client.global.set("ingressoId1", response.body.id);
+    client.log("Saved ingressoId1: " + response.body.id);
+  }
+%}
+
+###
+
+### @name createTestIngresso2  
+POST {{baseUrl}}/api/ingressi
+Content-Type: {{contentType}}
+
+{
+  "email": "auto-test-2@amoruso.com",
+  "ragione_sociale": "Auto Test 2 SpA",
+  "targa": "AUTO002",
+  "importo": 150.75
+}
+
+> {%
+  client.test("Create ingresso 2 success", function() {
+    client.assert(response.status === 201, "Response status is 201");
+  });
+  
+  if (response.status === 201) {
+    client.global.set("ingressoId2", response.body.id);
+    client.log("Saved ingressoId2: " + response.body.id);
+  }
+%}
+
+###
+
+### ================================
+### TESTS usando le variabili salvate
+### ================================
+
+### @name getIngressoById
+GET {{baseUrl}}/api/ingressi/{{ingressoId1}}
+Content-Type: {{contentType}}
+
+> {%
+  client.test("Get ingresso by ID success", function() {
+    client.assert(response.status === 200, "Response status is 200");
+    client.assert(response.body.email === "auto-test-1@amoruso.com", "Email matches");
+    client.assert(response.body.targa === "AUTO001", "Targa matches");
+  });
+%}
+
+###
+
+### @name updateIngresso
+PUT {{baseUrl}}/api/ingressi/{{ingressoId1}}
+Content-Type: {{contentType}}
+
+{
+  "ragione_sociale": "Auto Test 1 SRL - UPDATED",
+  "importo": 99.99
+}
+
+> {%
+  client.test("Update ingresso success", function() {
+    client.assert(response.status === 200, "Response status is 200");
+    client.assert(response.body.ragione_sociale === "Auto Test 1 SRL - UPDATED", "Ragione sociale updated");
+    client.assert(response.body.importo === 99.99, "Importo updated");
+  });
+%}
+
+###
+
+### @name getIngressiWithPagination
+GET {{baseUrl}}/api/ingressi?page=1&limit=10
+Content-Type: {{contentType}}
+
+> {%
+  client.test("Get ingressi with pagination", function() {
+    client.assert(response.status === 200, "Response status is 200");
+    client.assert(response.body.data !== undefined, "Data array exists");
+    client.assert(response.body.total !== undefined, "Total count exists");
+    client.assert(response.body.page === 1, "Page is correct");
+    client.assert(response.body.limit === 10, "Limit is correct");
+  });
+%}
+
+###
+
+### @name getStats
+GET {{baseUrl}}/api/ingressi/stats
+Content-Type: {{contentType}}
+
+> {%
+  client.test("Get stats success", function() {
+    client.assert(response.status === 200, "Response status is 200");
+    client.assert(response.body.total !== undefined, "Total exists");
+    client.assert(response.body.totalImporto !== undefined, "Total importo exists");
+    client.assert(response.body.mediaImporto !== undefined, "Media importo exists");
+    client.assert(typeof response.body.total === "number", "Total is number");
+  });
+%}
+
+###
+
+### @name searchIngressi
+GET {{baseUrl}}/api/ingressi/search?q=auto-test&limit=5
+Content-Type: {{contentType}}
+
+> {%
+  client.test("Search ingressi success", function() {
+    client.assert(response.status === 200, "Response status is 200");
+    client.assert(response.body.results !== undefined, "Results array exists");
+    client.assert(response.body.query === "auto-test", "Query matches");
+    client.assert(Array.isArray(response.body.results), "Results is array");
+  });
+%}
+
+###
+
+### ================================
+### ERROR TESTS
+### ================================
+
+### @name testValidationError
+POST {{baseUrl}}/api/ingressi
+Content-Type: {{contentType}}
+
+{
+  "email": "invalid-email",
+  "ragione_sociale": "",
+  "targa": "INVALID_TARGA_TOO_LONG",
+  "importo": -10
+}
+
+> {%
+  client.test("Validation error test", function() {
+    client.assert(response.status === 400, "Response status is 400");
+    client.assert(response.body.error !== undefined, "Error message exists");
+    client.assert(response.body.details !== undefined, "Error details exist");
+  });
+%}
+
+###
+
+### @name testNotFound
+GET {{baseUrl}}/api/ingressi/non-existent-id
+Content-Type: {{contentType}}
+
+> {%
+  client.test("Not found test", function() {
+    client.assert(response.status === 404, "Response status is 404");
+    client.assert(response.body.error !== undefined, "Error message exists");
+  });
+%}
+
+###
+
+### @name testBusinessRuleError
+POST {{baseUrl}}/api/ingressi
+Content-Type: {{contentType}}
+
+{
+  "email": "business-rule@test.com",
+  "ragione_sociale": "Business Rule Test",
+  "targa": "BR001BR",
+  "importo": 15000.00
+}
+
+> {%
+  client.test("Business rule error test", function() {
+    client.assert(response.status === 422, "Response status is 422");
+    client.assert(response.body.error !== undefined, "Error message exists");
+    client.assert(response.body.details !== undefined, "Business rule details exist");
+  });
+%}
+
+###
+
+### ================================
+### CLEANUP - Elimina dati di test
+### ================================
+
+### @name deleteTestIngresso1
+DELETE {{baseUrl}}/api/ingressi/{{ingressoId1}}
+Content-Type: {{contentType}}
+
+> {%
+  client.test("Delete ingresso 1 success", function() {
+    client.assert(response.status === 200, "Response status is 200");
+    client.assert(response.body.message !== undefined, "Success message exists");
+  });
+%}
+
+###
+
+### @name deleteTestIngresso2
+DELETE {{baseUrl}}/api/ingressi/{{ingressoId2}}
+Content-Type: {{contentType}}
+
+> {%
+  client.test("Delete ingresso 2 success", function() {
+    client.assert(response.status === 200, "Response status is 200");
+    client.assert(response.body.message !== undefined, "Success message exists");
+  });
+%}
+
+###
+
+### @name verifyDeletion
+GET {{baseUrl}}/api/ingressi/{{ingressoId1}}
+Content-Type: {{contentType}}
+
+> {%
+  client.test("Verify deletion", function() {
+    client.assert(response.status === 404, "Response status is 404 - ingresso deleted");
+  });
+%}

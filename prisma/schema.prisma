@@ -1,0 +1,21 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model Ingresso {
+  id              String   @id @default(cuid())
+  email           String
+  ragione_sociale String
+  targa           String
+  importo         Float
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  @@map("ingressi")
+}

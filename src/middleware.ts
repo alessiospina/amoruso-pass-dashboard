@@ -21,12 +21,16 @@ export default async function middleware(request: NextRequest, event: NextFetchE
    * Match all request paths except for the ones starting with:
    * - login
    * - register
+   * - api/ingressi (per test API)
+   * - api/health
    */
   if (![
     '/login',
     '/register',
     '/ads.txt',
-  ].includes(request.nextUrl.pathname)) {
+  ].includes(request.nextUrl.pathname) && 
+  !request.nextUrl.pathname.startsWith('/api/ingressi') &&
+  !request.nextUrl.pathname.startsWith('/api/health')) {
     const res: NextMiddlewareResult = await withAuth(
       // Response with local cookies
       () => response,
