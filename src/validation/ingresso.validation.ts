@@ -11,7 +11,8 @@ export const createIngressoSchema = z.object({
     .string()
     .min(1, 'Ragione sociale è obbligatoria')
     .max(255, 'Ragione sociale troppo lunga')
-    .trim(),
+    .trim()
+    .refine((val) => val.length > 0, 'Ragione sociale non può essere composta solo da spazi'),
   
   targa: z
     .string()

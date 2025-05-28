@@ -39,7 +39,7 @@ export default async function SidebarNav() {
       <SidebarNavItem icon={faPencil} href="/crea">
         Crea
       </SidebarNavItem>
-      <SidebarNavItem icon={faGauge} href="/">
+      <SidebarNavItem icon={faFileLines} href="/visualizza">
         Visualizza
       </SidebarNavItem>
     </ul>

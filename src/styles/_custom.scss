@@ -32,3 +32,54 @@
 .fadeIn {
   animation-name: fadeIn;
 }
+
+// Stili per i campi di input con errori
+.form-control {
+  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  
+  &.border-danger {
+    border-color: $danger !important;
+    box-shadow: 0 0 0 0.2rem rgba($danger, 0.25) !important;
+    
+    &:focus {
+      border-color: $danger !important;
+      box-shadow: 0 0 0 0.2rem rgba($danger, 0.25) !important;
+    }
+  }
+  
+  &.is-invalid {
+    border-color: $danger !important;
+    
+    &:focus {
+      border-color: $danger !important;
+      box-shadow: 0 0 0 0.2rem rgba($danger, 0.25) !important;
+    }
+  }
+  
+  // Migliora l'aspetto quando il campo diventa valido
+  &.is-valid {
+    border-color: $success !important;
+    
+    &:focus {
+      border-color: $success !important;
+      box-shadow: 0 0 0 0.2rem rgba($success, 0.25) !important;
+    }
+  }
+}
+
+// Migliora l'aspetto dei messaggi di errore
+.invalid-feedback {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-top: 0.25rem;
+}
+
+// Stili per i label dei campi richiesti
+.form-label {
+  font-weight: 600;
+  color: $dark;
+  
+  @include color-mode(dark) {
+    color: $light;
+  }
+}

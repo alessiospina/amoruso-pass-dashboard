@@ -56,6 +56,6 @@ Content-Type: {{contentType}}
 {
   "email": "auto-test-1@amoruso.com",
   "ragione_sociale": "Auto Test 1 SRL",
-  "targa": "AUTO001",
+  "targa": "AAAAAAAA",
   "importo": 25.50
 }

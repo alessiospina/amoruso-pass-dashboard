@@ -117,24 +117,6 @@ export class IngressoService {
       }
     }
 
-    // Business rule: controllo duplicati per email + targa nello stesso giorno
-    if (data.email && data.targa) {
-      const today = new Date()
-      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-      const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000 - 1)
-
-      const existing = await this.ingressoRepository.findMany({
-        email: data.email,
-        targa: data.targa,
-        date_from: startOfDay,
-        date_to: endOfDay,
-      }, { page: 1, limit: 1 })
-
-      if (existing.total > 0) {
-        errors.push('Esiste già un ingresso oggi per questa combinazione email/targa')
-      }
-    }
-
     return errors
   }
 }
