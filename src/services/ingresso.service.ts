@@ -13,11 +13,14 @@ export class IngressoService {
 
   async createIngresso(data: CreateIngressoDTO): Promise<Ingresso> {
     try {
-      // Business logic: normalizza la targa
+      // Business logic: normalizza i dati
       const normalizedData: CreateIngressoDTO = {
         ...data,
         targa: data.targa.toUpperCase().replace(/\s/g, ''),
         ragione_sociale: data.ragione_sociale.trim(),
+        email: data.email.toLowerCase().trim(),
+        partita_iva: data.partita_iva?.trim() || undefined,
+        indirizzo: data.indirizzo?.trim() || undefined,
       }
 
       return await this.ingressoRepository.create(normalizedData)
@@ -75,7 +78,15 @@ export class IngressoService {
     }
 
     if (normalizedData.email) {
-      normalizedData.email = normalizedData.email.toLowerCase()
+      normalizedData.email = normalizedData.email.toLowerCase().trim()
+    }
+
+    if (normalizedData.partita_iva !== undefined) {
+      normalizedData.partita_iva = normalizedData.partita_iva?.trim() || undefined
+    }
+
+    if (normalizedData.indirizzo !== undefined) {
+      normalizedData.indirizzo = normalizedData.indirizzo?.trim() || undefined
     }
 
     return this.ingressoRepository.update(id, normalizedData)
@@ -117,6 +128,94 @@ export class IngressoService {
       }
     }
 
+    // Business rule: validazione partita IVA italiana (algoritmo semplificato)
+    if (data.partita_iva) {
+      // Controllo di base: solo numeri e lunghezza
+      if (!/^[0-9]{11}$/.test(data.partita_iva)) {
+        errors.push('Partita IVA deve contenere esattamente 11 cifre')
+      }
+    }
+
     return errors
+  }
+
+  // Metodi per statistiche dashboard
+  async getTotalCount(): Promise<number> {
+    return await this.ingressoRepository.count()
+  }
+
+  async getTodayCount(): Promise<number> {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    
+    return await this.ingressoRepository.countByDateRange(today, tomorrow)
+  }
+
+  async getMonthlyCount(): Promise<number> {
+    const now = new Date()
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
+    
+    return await this.ingressoRepository.countByDateRange(startOfMonth, endOfMonth)
+  }
+
+  async getTotalRevenue(): Promise<number> {
+    return await this.ingressoRepository.sumImporti()
+  }
+
+  async getTodayRevenue(): Promise<number> {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    
+    return await this.ingressoRepository.sumImportiByDateRange(today, tomorrow)
+  }
+
+  async getMonthlyRevenue(): Promise<number> {
+    const now = new Date()
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
+    
+    return await this.ingressoRepository.sumImportiByDateRange(startOfMonth, endOfMonth)
+  }
+
+  async getDailyStats(days: number): Promise<Array<{ date: string, ingressi: number, importo: number }>> {
+    return await this.ingressoRepository.getDailyStats(days)
+  }
+
+  async getMonthlyStats(months: number): Promise<Array<{ month: string, ingressi: number, importo: number }>> {
+    return await this.ingressoRepository.getMonthlyStats(months)
+  }
+
+  async getTopTarghe(limit: number): Promise<Array<{ targa: string, count: number, totalImporto: number }>> {
+    return await this.ingressoRepository.getTopTarghe(limit)
+  }
+
+  async getTopRagioneSociali(limit: number): Promise<Array<{ ragione_sociale: string, count: number, totalImporto: number }>> {
+    return await this.ingressoRepository.getTopRagioneSociali(limit)
+  }
+
+  async getUniqueTargheCount(): Promise<number> {
+    return await this.ingressoRepository.getUniqueTargheCount()
+  }
+
+  async getUniqueRagioneSocialiCount(): Promise<number> {
+    return await this.ingressoRepository.getUniqueRagioneSocialiCount()
+  }
+
+  async getMostProfitableTarga(): Promise<{ targa: string, totalImporto: number } | null> {
+    return await this.ingressoRepository.getMostProfitableTarga()
+  }
+
+  async getMostProfitableRagioneSociale(): Promise<{ ragione_sociale: string, totalImporto: number } | null> {
+    return await this.ingressoRepository.getMostProfitableRagioneSociale()
+  }
+
+  async getRecentActivity(limit: number): Promise<Ingresso[]> {
+    const result = await this.ingressoRepository.findMany({}, { page: 1, limit })
+    return result.data
   }
 }

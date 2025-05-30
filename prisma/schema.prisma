@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider     = "mysql"
-  url          = env("DATABASE_URL")
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
   shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
@@ -13,9 +13,24 @@ model Ingresso {
   email           String
   ragione_sociale String
   targa           String
+  partita_iva     String
+  indirizzo       String
   importo         Float
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 
   @@map("ingressi")
+}
+
+model Email {
+  id         String   @id @default(cuid())
+  name       String
+  recipients String   @db.Text
+  subject    String
+  body       String   @db.Text
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  isActive   Boolean  @default(true)
+
+  @@map("emails")
 }

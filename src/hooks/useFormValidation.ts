@@ -111,7 +111,7 @@ export function useFormValidation<T extends Record<string, any>>({
     
     // Marca tutti i campi con errori come toccati
     const fieldsWithErrors = Object.keys(newErrors)
-    setTouchedFields(prev => new Set([...prev, ...fieldsWithErrors]))
+    setTouchedFields(prev => new Set([...Array.from(prev), ...fieldsWithErrors]))
     
     return false
   }, [data, schema])

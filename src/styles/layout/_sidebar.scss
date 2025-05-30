@@ -60,6 +60,11 @@ $sidebar-overlay-z-index: 1025;
       font-size: 80%;
     }
 
+    // Aggiungi spazio sopra il primo elemento della navigazione
+    > ul > li:first-child {
+      margin-top: 1rem;
+    }
+
     .nav-link {
       color: $sidebar-link-color;
 

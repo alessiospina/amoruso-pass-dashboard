@@ -11,6 +11,8 @@ interface Ingresso {
   email: string
   ragione_sociale: string
   targa: string
+  partita_iva: string
+  indirizzo: string
   importo: number
   created_at: string
   updated_at: string
@@ -44,6 +46,8 @@ export default function VisualizzaIngressiPage() {
     email: '',
     ragione_sociale: '',
     targa: '',
+    partita_iva: '',
+    indirizzo: '',
     importo: 0
   })
   const [editLoading, setEditLoading] = useState(false)
@@ -180,6 +184,8 @@ export default function VisualizzaIngressiPage() {
       email: ingresso.email,
       ragione_sociale: ingresso.ragione_sociale,
       targa: ingresso.targa,
+      partita_iva: ingresso.partita_iva,
+      indirizzo: ingresso.indirizzo,
       importo: ingresso.importo
     })
     setEditImportoDisplayValue(ingresso.importo === 0 ? '' : ingresso.importo.toFixed(2))
@@ -198,6 +204,10 @@ export default function VisualizzaIngressiPage() {
       setEditFormData(prev => ({ ...prev, importo: numValue }))
     } else if (name === 'targa') {
       const processedValue = value.toUpperCase().replace(/\s/g, '')
+      setEditFormData(prev => ({ ...prev, [name]: processedValue }))
+    } else if (name === 'partita_iva') {
+      // Solo numeri per la partita IVA
+      const processedValue = value.replace(/\D/g, '')
       setEditFormData(prev => ({ ...prev, [name]: processedValue }))
     } else {
       setEditFormData(prev => ({ ...prev, [name]: value }))
@@ -240,7 +250,7 @@ export default function VisualizzaIngressiPage() {
           }
         })
         setEditFieldErrors(newErrors)
-        setEditTouchedFields(new Set(['email', 'ragione_sociale', 'targa', 'importo']))
+        setEditTouchedFields(new Set(['email', 'ragione_sociale', 'targa', 'partita_iva', 'indirizzo', 'importo']))
       }
       return
     }
@@ -279,7 +289,7 @@ export default function VisualizzaIngressiPage() {
           
           if (Object.keys(serverErrors).length > 0) {
             setEditFieldErrors(serverErrors)
-            setEditTouchedFields(prev => new Set([...prev, ...Object.keys(serverErrors)]))
+            setEditTouchedFields(prev => new Set([...Array.from(prev), ...Object.keys(serverErrors)]))
             return
           }
         }
@@ -382,10 +392,11 @@ export default function VisualizzaIngressiPage() {
                               <th>Email</th>
                               <th>Ragione Sociale</th>
                               <th>Targa</th>
+                              <th>P.IVA</th>
+                              <th>Indirizzo</th>
                               <th>Importo</th>
                               <th>Data Creazione</th>
-                              <th>Ultima Modifica</th>
-                              <th width="120">Azioni</th>
+                              <th style={{ width: '120px' }}>Azioni</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -398,14 +409,21 @@ export default function VisualizzaIngressiPage() {
                                     {ingresso.targa}
                                   </span>
                                 </td>
+                                <td>
+                                  <span className="badge bg-info">
+                                    {ingresso.partita_iva}
+                                  </span>
+                                </td>
+                                <td>
+                                  <span className="text-truncate d-inline-block" style={{ maxWidth: '200px' }} title={ingresso.indirizzo}>
+                                    {ingresso.indirizzo}
+                                  </span>
+                                </td>
                                 <td className="fw-bold text-success">
                                   {formatImporto(ingresso.importo)}
                                 </td>
                                 <td className="text-muted">
                                   {formatDate(ingresso.created_at)}
-                                </td>
-                                <td className="text-muted">
-                                  {formatDate(ingresso.updated_at)}
                                 </td>
                                 <td>
                                   <div className="d-flex gap-1">
@@ -599,6 +617,60 @@ export default function VisualizzaIngressiPage() {
                   </Form.Text>
                 </Form.Group>
               </Col>
+              <Col xs={12} lg={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Partita IVA *</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="partita_iva"
+                    value={editFormData.partita_iva}
+                    onChange={handleEditInputChange}
+                    onBlur={handleEditFieldBlur}
+                    placeholder="Inserisci partita IVA (11 cifre)"
+                    required
+                    disabled={editLoading}
+                    maxLength={11}
+                    isInvalid={shouldShowEditError('partita_iva')}
+                    className={shouldShowEditError('partita_iva') ? 'border-danger' : ''}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {getEditErrorMessage('partita_iva')}
+                  </Form.Control.Feedback>
+                  <Form.Text className="text-muted">
+                    Solo numeri, 11 cifre
+                  </Form.Text>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col xs={12}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Indirizzo *</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="indirizzo"
+                    value={editFormData.indirizzo}
+                    onChange={handleEditInputChange}
+                    onBlur={handleEditFieldBlur}
+                    placeholder="Inserisci indirizzo completo"
+                    required
+                    disabled={editLoading}
+                    maxLength={500}
+                    isInvalid={shouldShowEditError('indirizzo')}
+                    className={shouldShowEditError('indirizzo') ? 'border-danger' : ''}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {getEditErrorMessage('indirizzo')}
+                  </Form.Control.Feedback>
+                  <Form.Text className="text-muted">
+                    Massimo 500 caratteri
+                  </Form.Text>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
               <Col xs={12} lg={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Importo (€) *</Form.Label>

@@ -4,9 +4,13 @@ import React, { useState } from 'react'
 import { Card, Row, Col, Form, Button, Alert, Toast, ToastContainer } from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSave, faTrash, faCheck } from '@fortawesome/free-solid-svg-icons'
+import { validateCreateIngresso } from '@/validation/ingresso.validation'
 import { CreateIngressoDTO } from '@/dto/ingresso.dto'
-import { createIngressoSchema } from '@/validation/ingresso.validation'
-import { useFormValidation } from '@/hooks/useFormValidation'
+
+// Schema personalizzato per il nostro use case
+const customSchema = {
+  safeParse: validateCreateIngresso
+}
 
 interface FieldError {
   message: string
@@ -30,41 +34,78 @@ export default function IngressoForm({ onSuccess, onError }: IngressoFormProps) 
     email: '',
     ragione_sociale: '',
     targa: '',
+    partita_iva: '',
+    indirizzo: '',
     importo: 0,
   }
 
-  const {
-    data: formData,
-    updateField,
-    validateField,
-    validateAll,
-    resetForm,
-    shouldShowError: hookShouldShowError,
-    getErrorMessage: hookGetErrorMessage,
-    markFieldTouched
-  } = useFormValidation({
-    schema: createIngressoSchema,
-    initialData
-  })
+  const [formData, setFormData] = useState<CreateIngressoDTO>(initialData)
 
-  // Combina errori dal hook e errori dal server
-  const shouldShowError = (fieldName: string) => {
-    const serverError = fieldErrors[fieldName]
-    const hookError = hookShouldShowError(fieldName)
-    return (touchedFields.has(fieldName) && serverError && !serverError.isValid) || hookError
+  // Funzione per aggiornare un campo
+  const updateField = (name: keyof CreateIngressoDTO, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
   }
 
+  // Funzione per validare un campo specifico
+  const validateField = (name: keyof CreateIngressoDTO) => {
+    const result = validateCreateIngresso(formData)
+    if (!result.success) {
+      const fieldError = result.error.issues.find(issue => 
+        issue.path.includes(name as string)
+      )
+      
+      if (fieldError) {
+        setFieldErrors(prev => ({
+          ...prev,
+          [name]: { message: fieldError.message, isValid: false }
+        }))
+        return false
+      }
+    }
+    
+    setFieldErrors(prev => ({
+      ...prev,
+      [name]: { message: '', isValid: true }
+    }))
+    return true
+  }
+
+  // Funzione per validare tutto il form
+  const validateAll = () => {
+    const result = validateCreateIngresso(formData)
+    return result.success
+  }
+
+  // Reset del form
+  const resetForm = () => {
+    setFormData(initialData)
+    setFieldErrors({})
+    setTouchedFields(new Set())
+  }
+
+  // Mark field as touched
+  const markFieldTouched = (name: keyof CreateIngressoDTO) => {
+    setTouchedFields(prev => new Set([...Array.from(prev), name as string]))
+  }
+
+  // Check if should show error
+  const shouldShowError = (fieldName: string) => {
+    const serverError = fieldErrors[fieldName]
+    return touchedFields.has(fieldName) && serverError && !serverError.isValid
+  }
+
+  // Get error message
   const getErrorMessage = (fieldName: string) => {
     const serverError = fieldErrors[fieldName]
-    if (touchedFields.has(fieldName) && serverError && !serverError.isValid) {
-      return serverError.message
-    }
-    return hookGetErrorMessage(fieldName)
+    return serverError && !serverError.isValid ? serverError.message : ''
   }
 
   // Calcola se il form è valido
   const isFormValid = () => {
-    const result = createIngressoSchema.safeParse(formData)
+    const result = validateCreateIngresso(formData)
     return result.success
   }
 
@@ -94,8 +135,20 @@ export default function IngressoForm({ onSuccess, onError }: IngressoFormProps) 
     } else if (name === 'targa') {
       processedValue = value.toUpperCase().replace(/\s/g, '')
       updateField(name as keyof CreateIngressoDTO, processedValue)
+    } else if (name === 'partita_iva') {
+      // Solo numeri per la partita IVA
+      processedValue = value.replace(/\D/g, '')
+      updateField(name as keyof CreateIngressoDTO, processedValue)
     } else {
       updateField(name as keyof CreateIngressoDTO, processedValue)
+    }
+
+    // Se il campo è già stato toccato, valida in tempo reale
+    if (touchedFields.has(name)) {
+      // Usa setTimeout per permettere al state di aggiornarsi
+      setTimeout(() => {
+        validateField(name as keyof CreateIngressoDTO)
+      }, 0)
     }
   }
 
@@ -112,7 +165,11 @@ export default function IngressoForm({ onSuccess, onError }: IngressoFormProps) 
     
     setTouchedFields(prev => new Set(prev).add(name))
     markFieldTouched(name as keyof CreateIngressoDTO)
-    validateField(name as keyof CreateIngressoDTO)
+    
+    // Valida il campo dopo un breve delay per assicurarci che lo state sia aggiornato
+    setTimeout(() => {
+      validateField(name as keyof CreateIngressoDTO)
+    }, 50)
   }
 
   const handleClear = () => {
@@ -172,7 +229,7 @@ export default function IngressoForm({ onSuccess, onError }: IngressoFormProps) 
           if (Object.keys(serverErrors).length > 0) {
             setFieldErrors(serverErrors)
             // Marca tutti i campi con errori come toccati per mostrarli
-            setTouchedFields(prev => new Set([...prev, ...Object.keys(serverErrors)]))
+            setTouchedFields(prev => new Set([...Array.from(prev), ...Object.keys(serverErrors)]))
             return
           }
         }
@@ -278,6 +335,62 @@ export default function IngressoForm({ onSuccess, onError }: IngressoFormProps) 
                   </Form.Text>
                 </Form.Group>
               </Col>
+              <Col xs={12} lg={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Partita IVA *</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="partita_iva"
+                    value={formData.partita_iva || ''}
+                    onChange={handleInputChange}
+                    onBlur={handleFieldBlur}
+                    placeholder="Inserisci partita IVA (11 cifre)"
+                    size="lg"
+                    required
+                    disabled={loading}
+                    maxLength={11}
+                    isInvalid={shouldShowError('partita_iva')}
+                    className={shouldShowError('partita_iva') ? 'border-danger' : ''}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {getErrorMessage('partita_iva')}
+                  </Form.Control.Feedback>
+                  <Form.Text className="text-muted">
+                    Solo numeri, 11 cifre
+                  </Form.Text>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col xs={12}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Indirizzo *</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="indirizzo"
+                    value={formData.indirizzo || ''}
+                    onChange={handleInputChange}
+                    onBlur={handleFieldBlur}
+                    placeholder="Inserisci indirizzo completo"
+                    size="lg"
+                    required
+                    disabled={loading}
+                    maxLength={500}
+                    isInvalid={shouldShowError('indirizzo')}
+                    className={shouldShowError('indirizzo') ? 'border-danger' : ''}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {getErrorMessage('indirizzo')}
+                  </Form.Control.Feedback>
+                  <Form.Text className="text-muted">
+                    Massimo 500 caratteri
+                  </Form.Text>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
               <Col xs={12} lg={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Importo (€) *</Form.Label>

@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
-export const createIngressoSchema = z.object({
+// Schema base senza transform per permettere .partial()
+const baseIngressoSchema = z.object({
   email: z
     .string()
     .min(1, 'Email è obbligatoria')
@@ -21,6 +22,19 @@ export const createIngressoSchema = z.object({
     .regex(/^[A-Z0-9]+$/, 'Targa deve contenere solo lettere maiuscole e numeri')
     .transform(val => val.toUpperCase()),
   
+  partita_iva: z
+    .string()
+    .min(1, 'Partita IVA è obbligatoria')
+    .length(11, 'Partita IVA deve contenere esattamente 11 cifre')
+    .regex(/^[0-9]{11}$/, 'Partita IVA deve contenere solo numeri'),
+
+  indirizzo: z
+    .string()
+    .min(1, 'Indirizzo è obbligatorio')
+    .max(500, 'Indirizzo troppo lungo (max 500 caratteri)')
+    .trim()
+    .refine((val) => val.length > 0, 'Indirizzo non può essere composto solo da spazi'),
+  
   importo: z
     .number()
     .min(0, 'Importo deve essere positivo')
@@ -29,12 +43,64 @@ export const createIngressoSchema = z.object({
     .refine((val) => Number(val.toFixed(2)) === val, 'Importo può avere massimo 2 decimali')
 })
 
-export const updateIngressoSchema = createIngressoSchema.partial()
+// Schema per la creazione (identico al base dato che tutti i campi sono obbligatori)
+export const createIngressoSchema = baseIngressoSchema
+
+// Schema per l'update con tutti i campi opzionali
+export const updateIngressoSchema = z.object({
+  email: z
+    .string()
+    .min(1, 'Email è obbligatoria')
+    .email('Formato email non valido')
+    .max(255, 'Email troppo lunga')
+    .optional(),
+  
+  ragione_sociale: z
+    .string()
+    .min(1, 'Ragione sociale è obbligatoria')
+    .max(255, 'Ragione sociale troppo lunga')
+    .trim()
+    .refine((val) => val.length > 0, 'Ragione sociale non può essere composta solo da spazi')
+    .optional(),
+  
+  targa: z
+    .string()
+    .min(1, 'Targa è obbligatoria')
+    .max(10, 'Targa troppo lunga')
+    .regex(/^[A-Z0-9]+$/, 'Targa deve contenere solo lettere maiuscole e numeri')
+    .transform(val => val.toUpperCase())
+    .optional(),
+  
+  partita_iva: z
+    .string()
+    .min(1, 'Partita IVA è obbligatoria')
+    .length(11, 'Partita IVA deve contenere esattamente 11 cifre')
+    .regex(/^[0-9]{11}$/, 'Partita IVA deve contenere solo numeri')
+    .optional(),
+  
+  indirizzo: z
+    .string()
+    .min(1, 'Indirizzo è obbligatorio')
+    .max(500, 'Indirizzo troppo lungo (max 500 caratteri)')
+    .trim()
+    .refine((val) => val.length > 0, 'Indirizzo non può essere composto solo da spazi')
+    .optional(),
+  
+  importo: z
+    .number()
+    .min(0, 'Importo deve essere positivo')
+    .max(999999.99, 'Importo troppo alto')
+    .refine((val) => Number.isFinite(val), 'Importo deve essere un numero valido')
+    .refine((val) => Number(val.toFixed(2)) === val, 'Importo può avere massimo 2 decimali')
+    .optional()
+})
 
 export const ingressoFiltersSchema = z.object({
   email: z.string().email().optional(),
   ragione_sociale: z.string().optional(),
   targa: z.string().transform(val => val?.toUpperCase()).optional(),
+  partita_iva: z.string().regex(/^[0-9]{11}$/, 'Partita IVA deve contenere esattamente 11 cifre').optional(),
+  indirizzo: z.string().optional(),
   importo_min: z.number().min(0).optional(),
   importo_max: z.number().min(0).optional(),
   date_from: z.coerce.date().optional(),
@@ -78,7 +144,7 @@ export const idSchema = z.object({
 })
 
 // Type exports
-export type CreateIngressoInput = z.infer<typeof createIngressoSchema>
+export type CreateIngressoInput = z.infer<typeof baseIngressoSchema>
 export type UpdateIngressoInput = z.infer<typeof updateIngressoSchema>
 export type IngressoFiltersInput = z.infer<typeof ingressoFiltersSchema>
 export type PaginationInput = z.infer<typeof paginationSchema>
@@ -87,7 +153,7 @@ export type IdInput = z.infer<typeof idSchema>
 
 // Validation helper functions
 export const validateCreateIngresso = (data: unknown) => {
-  return createIngressoSchema.safeParse(data)
+  return baseIngressoSchema.safeParse(data)
 }
 
 export const validateUpdateIngresso = (data: unknown) => {

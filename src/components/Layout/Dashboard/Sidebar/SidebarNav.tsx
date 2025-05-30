@@ -13,6 +13,7 @@ import {
   faPencil,
   faPuzzlePiece,
   faRightToBracket,
+  faEnvelope,
 } from '@fortawesome/free-solid-svg-icons'
 import React, { PropsWithChildren } from 'react'
 import { Badge } from 'react-bootstrap'
@@ -41,6 +42,9 @@ export default async function SidebarNav() {
       </SidebarNavItem>
       <SidebarNavItem icon={faFileLines} href="/visualizza">
         Visualizza
+      </SidebarNavItem>
+      <SidebarNavItem icon={faEnvelope} href="/imposta-email">
+        Imposta Email
       </SidebarNavItem>
     </ul>
   )

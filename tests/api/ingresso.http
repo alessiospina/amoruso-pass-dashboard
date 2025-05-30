@@ -57,5 +57,48 @@ Content-Type: {{contentType}}
   "email": "auto-test-1@amoruso.com",
   "ragione_sociale": "Auto Test 1 SRL",
   "targa": "AAAAAAAA",
+  "partita_iva": "12345678901",
+  "indirizzo": "Via Roma 123, Milano",
   "importo": 25.50
 }
+
+### @name createTestIngressoMissingPartitaIva
+POST {{baseUrl}}/api/ingressi
+Content-Type: {{contentType}}
+
+{
+  "email": "auto-test-2@amoruso.com",
+  "ragione_sociale": "Auto Test 2 SRL",
+  "targa": "BBBBBBBB",
+  "indirizzo": "Via Napoli 456, Roma",
+  "importo": 30.75
+}
+
+### @name createTestIngressoMissingIndirizzo
+POST {{baseUrl}}/api/ingressi
+Content-Type: {{contentType}}
+
+{
+  "email": "auto-test-3@amoruso.com",
+  "ragione_sociale": "Auto Test 3 SRL",
+  "targa": "CCCCCCCC",
+  "partita_iva": "98765432109",
+  "importo": 15.25
+}
+
+### @name createTestIngressoInvalidPartitaIva
+POST {{baseUrl}}/api/ingressi
+Content-Type: {{contentType}}
+
+{
+  "email": "auto-test-4@amoruso.com",
+  "ragione_sociale": "Auto Test 4 SRL",
+  "targa": "DDDDDDDD",
+  "partita_iva": "123", // Partita IVA troppo corta
+  "indirizzo": "Via Torino 789, Torino",
+  "importo": 40.00
+}
+
+### @name testFiltersWithNewFields
+GET {{baseUrl}}/api/ingressi?partita_iva=12345678901&indirizzo=Milano
+Content-Type: {{contentType}}

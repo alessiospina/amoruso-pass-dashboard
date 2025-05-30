@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getIngressoService } from '@/container/ingresso.container'
+import { getEmailService } from '@/container/email.container'
 import { 
-  validateCreateIngresso, 
-  validateIngressoFilters, 
-  validatePagination 
-} from '@/validation/ingresso.validation'
+  validateCreateEmail, 
+  validateEmailFilters, 
+} from '@/validation/email.validation'
+import { validatePagination } from '@/validation/ingresso.validation'
 
-// GET - Lista ingressi con filtri e paginazione
+// GET - Lista email templates con filtri e paginazione
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -29,18 +29,12 @@ export async function GET(request: NextRequest) {
 
     // Valida filtri
     const filtersData = {
-      email: searchParams.get('email') || undefined,
-      ragione_sociale: searchParams.get('ragione_sociale') || undefined,
-      targa: searchParams.get('targa') || undefined,
-      partita_iva: searchParams.get('partita_iva') || undefined,
-      indirizzo: searchParams.get('indirizzo') || undefined,
-      importo_min: searchParams.get('importo_min') ? parseFloat(searchParams.get('importo_min')!) : undefined,
-      importo_max: searchParams.get('importo_max') ? parseFloat(searchParams.get('importo_max')!) : undefined,
-      date_from: searchParams.get('date_from') || undefined,
-      date_to: searchParams.get('date_to') || undefined,
+      name: searchParams.get('name') || undefined,
+      subject: searchParams.get('subject') || undefined,
+      recipient: searchParams.get('recipient') || undefined,
     }
 
-    const filtersResult = validateIngressoFilters(filtersData)
+    const filtersResult = validateEmailFilters(filtersData)
 
     if (!filtersResult.success) {
       return NextResponse.json(
@@ -52,15 +46,15 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const service = getIngressoService()
-    const result = await service.getIngressi(
+    const service = getEmailService()
+    const result = await service.getEmails(
       filtersResult.data,
       paginationResult.data
     )
     
     return NextResponse.json(result)
   } catch (error) {
-    console.error('Errore GET /api/ingressi:', error)
+    console.error('Errore GET /api/emails:', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Errore interno del server' },
       { status: 500 }
@@ -68,13 +62,13 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Crea nuovo ingresso
+// POST - Crea nuovo template email
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     
     // Validazione input
-    const validationResult = validateCreateIngresso(body)
+    const validationResult = validateCreateEmail(body)
     
     if (!validationResult.success) {
       return NextResponse.json(
@@ -86,7 +80,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const service = getIngressoService()
+    const service = getEmailService()
     
     // Validazione business rules
     const businessErrors = await service.validateBusinessRules(validationResult.data)
@@ -101,11 +95,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const ingresso = await service.createIngresso(validationResult.data)
+    const email = await service.createEmail(validationResult.data)
 
-    return NextResponse.json(ingresso, { status: 201 })
+    return NextResponse.json(email, { status: 201 })
   } catch (error) {
-    console.error('Errore POST /api/ingressi:', error)
+    console.error('Errore POST /api/emails:', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Errore interno del server' },
       { status: 500 }

@@ -19,6 +19,19 @@ export interface IngressoRepository {
   count(filters?: IngressoFiltersDTO): Promise<number>;
   search(query: string, limit: number): Promise<Ingresso[]>;
   getCountByDateRange(startDate: Date, endDate: Date): Promise<number>;
+  
+  // Metodi per statistiche
+  countByDateRange(startDate: Date, endDate: Date): Promise<number>;
+  sumImporti(): Promise<number>;
+  sumImportiByDateRange(startDate: Date, endDate: Date): Promise<number>;
+  getDailyStats(days: number): Promise<Array<{ date: string, ingressi: number, importo: number }>>;
+  getMonthlyStats(months: number): Promise<Array<{ month: string, ingressi: number, importo: number }>>;
+  getTopTarghe(limit: number): Promise<Array<{ targa: string, count: number, totalImporto: number }>>;
+  getTopRagioneSociali(limit: number): Promise<Array<{ ragione_sociale: string, count: number, totalImporto: number }>>;
+  getUniqueTargheCount(): Promise<number>;
+  getUniqueRagioneSocialiCount(): Promise<number>;
+  getMostProfitableTarga(): Promise<{ targa: string, totalImporto: number } | null>;
+  getMostProfitableRagioneSociale(): Promise<{ ragione_sociale: string, totalImporto: number } | null>;
 }
 
 export class PrismaIngressoRepository implements IngressoRepository {
@@ -30,6 +43,8 @@ export class PrismaIngressoRepository implements IngressoRepository {
         email: data.email,
         ragione_sociale: data.ragione_sociale,
         targa: data.targa.toUpperCase(),
+        partita_iva: data.partita_iva,
+        indirizzo: data.indirizzo,
         importo: data.importo,
       },
     })
@@ -117,6 +132,8 @@ export class PrismaIngressoRepository implements IngressoRepository {
           { email: { contains: query } },
           { ragione_sociale: { contains: query } },
           { targa: { contains: query.toUpperCase() } },
+          { partita_iva: { contains: query } },
+          { indirizzo: { contains: query } },
         ],
       },
       take: limit,
@@ -135,6 +152,179 @@ export class PrismaIngressoRepository implements IngressoRepository {
     })
   }
 
+  // Implementazione metodi per statistiche
+  async countByDateRange(startDate: Date, endDate: Date): Promise<number> {
+    return this.prisma.ingresso.count({
+      where: {
+        created_at: {
+          gte: startDate,
+          lt: endDate,
+        },
+      },
+    })
+  }
+
+  async sumImporti(): Promise<number> {
+    const result = await this.prisma.ingresso.aggregate({
+      _sum: {
+        importo: true,
+      },
+    })
+    return result._sum.importo || 0
+  }
+
+  async sumImportiByDateRange(startDate: Date, endDate: Date): Promise<number> {
+    const result = await this.prisma.ingresso.aggregate({
+      where: {
+        created_at: {
+          gte: startDate,
+          lt: endDate,
+        },
+      },
+      _sum: {
+        importo: true,
+      },
+    })
+    return result._sum.importo || 0
+  }
+
+  async getDailyStats(days: number): Promise<Array<{ date: string, ingressi: number, importo: number }>> {
+    const startDate = new Date()
+    startDate.setDate(startDate.getDate() - days)
+    startDate.setHours(0, 0, 0, 0)
+
+    const results = await this.prisma.$queryRaw`
+      SELECT 
+        DATE(created_at) as date,
+        COUNT(*) as ingressi,
+        COALESCE(SUM(importo), 0) as importo
+      FROM ingressi 
+      WHERE created_at >= ${startDate}
+      GROUP BY DATE(created_at)
+      ORDER BY date DESC
+    ` as Array<{ date: Date, ingressi: bigint, importo: number }>
+
+    return results.map(row => ({
+      date: new Date(row.date).toISOString().split('T')[0],
+      ingressi: Number(row.ingressi),
+      importo: Number(row.importo || 0),
+    }))
+  }
+
+  async getMonthlyStats(months: number): Promise<Array<{ month: string, ingressi: number, importo: number }>> {
+    const startDate = new Date()
+    startDate.setMonth(startDate.getMonth() - months)
+    startDate.setDate(1)
+    startDate.setHours(0, 0, 0, 0)
+
+    const results = await this.prisma.$queryRaw`
+      SELECT 
+        DATE_FORMAT(created_at, '%Y-%m') as month,
+        COUNT(*) as ingressi,
+        COALESCE(SUM(importo), 0) as importo
+      FROM ingressi 
+      WHERE created_at >= ${startDate}
+      GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+      ORDER BY month DESC
+    ` as Array<{ month: string, ingressi: bigint, importo: number }>
+
+    return results.map(row => ({
+      month: row.month,
+      ingressi: Number(row.ingressi),
+      importo: Number(row.importo || 0),
+    }))
+  }
+
+  async getTopTarghe(limit: number): Promise<Array<{ targa: string, count: number, totalImporto: number }>> {
+    const results = await this.prisma.$queryRaw`
+      SELECT 
+        targa,
+        COUNT(*) as count,
+        COALESCE(SUM(importo), 0) as totalImporto
+      FROM ingressi 
+      GROUP BY targa
+      ORDER BY count DESC, totalImporto DESC
+      LIMIT ${limit}
+    ` as Array<{ targa: string, count: bigint, totalImporto: number }>
+
+    return results.map(row => ({
+      targa: row.targa,
+      count: Number(row.count),
+      totalImporto: Number(row.totalImporto || 0),
+    }))
+  }
+
+  async getTopRagioneSociali(limit: number): Promise<Array<{ ragione_sociale: string, count: number, totalImporto: number }>> {
+    const results = await this.prisma.$queryRaw`
+      SELECT 
+        ragione_sociale,
+        COUNT(*) as count,
+        COALESCE(SUM(importo), 0) as totalImporto
+      FROM ingressi 
+      GROUP BY ragione_sociale
+      ORDER BY count DESC, totalImporto DESC
+      LIMIT ${limit}
+    ` as Array<{ ragione_sociale: string, count: bigint, totalImporto: number }>
+
+    return results.map(row => ({
+      ragione_sociale: row.ragione_sociale,
+      count: Number(row.count),
+      totalImporto: Number(row.totalImporto || 0),
+    }))
+  }
+
+  async getUniqueTargheCount(): Promise<number> {
+    const result = await this.prisma.$queryRaw`
+      SELECT COUNT(DISTINCT targa) as count
+      FROM ingressi
+    ` as Array<{ count: bigint }>
+
+    return Number(result[0]?.count || 0)
+  }
+
+  async getUniqueRagioneSocialiCount(): Promise<number> {
+    const result = await this.prisma.$queryRaw`
+      SELECT COUNT(DISTINCT ragione_sociale) as count
+      FROM ingressi
+    ` as Array<{ count: bigint }>
+
+    return Number(result[0]?.count || 0)
+  }
+
+  async getMostProfitableTarga(): Promise<{ targa: string, totalImporto: number } | null> {
+    const results = await this.prisma.$queryRaw`
+      SELECT 
+        targa,
+        COALESCE(SUM(importo), 0) as totalImporto
+      FROM ingressi 
+      GROUP BY targa
+      ORDER BY totalImporto DESC
+      LIMIT 1
+    ` as Array<{ targa: string, totalImporto: number }>
+
+    return results[0] ? {
+      targa: results[0].targa,
+      totalImporto: Number(results[0].totalImporto || 0)
+    } : null
+  }
+
+  async getMostProfitableRagioneSociale(): Promise<{ ragione_sociale: string, totalImporto: number } | null> {
+    const results = await this.prisma.$queryRaw`
+      SELECT 
+        ragione_sociale,
+        COALESCE(SUM(importo), 0) as totalImporto
+      FROM ingressi 
+      GROUP BY ragione_sociale
+      ORDER BY totalImporto DESC
+      LIMIT 1
+    ` as Array<{ ragione_sociale: string, totalImporto: number }>
+
+    return results[0] ? {
+      ragione_sociale: results[0].ragione_sociale,
+      totalImporto: Number(results[0].totalImporto || 0)
+    } : null
+  }
+
   private buildWhereClause(filters: IngressoFiltersDTO): any {
     const where: any = {}
 
@@ -148,6 +338,14 @@ export class PrismaIngressoRepository implements IngressoRepository {
 
     if (filters.targa) {
       where.targa = { contains: filters.targa.toUpperCase() }
+    }
+
+    if (filters.partita_iva) {
+      where.partita_iva = { contains: filters.partita_iva }
+    }
+
+    if (filters.indirizzo) {
+      where.indirizzo = { contains: filters.indirizzo }
     }
 
     if (filters.importo_min !== undefined || filters.importo_max !== undefined) {

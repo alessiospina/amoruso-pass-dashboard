@@ -2,6 +2,8 @@ export interface CreateIngressoDTO {
   email: string
   ragione_sociale: string
   targa: string
+  partita_iva: string
+  indirizzo: string
   importo: number
 }
 
@@ -11,6 +13,8 @@ export interface IngressoFiltersDTO {
   email?: string
   ragione_sociale?: string
   targa?: string
+  partita_iva?: string
+  indirizzo?: string
   importo_min?: number
   importo_max?: number
   date_from?: Date
