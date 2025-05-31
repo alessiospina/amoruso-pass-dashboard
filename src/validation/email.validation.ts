@@ -65,6 +65,26 @@ export const emailIdSchema = z.object({
   id: z.string().cuid('ID non valido'),
 })
 
+// Schema per anteprima email
+export const emailPreviewSchema = z.object({
+  templateId: z.string().cuid('ID template non valido'),
+  ingressoId: z.string().cuid('ID ingresso non valido'),
+})
+
+// Schema per invio email singola
+export const sendSingleEmailSchema = z.object({
+  ingressoId: z.string().cuid('ID ingresso non valido'),
+  templateId: z.string().cuid('ID template non valido'),
+  ccEmails: z.array(z.string().email('Formato email non valido')).optional().default([]),
+})
+
+// Schema per invio email bulk
+export const sendBulkEmailSchema = z.object({
+  ingressoIds: z.array(z.string().cuid('ID ingresso non valido')).min(1, 'Almeno un ingresso è necessario'),
+  templateId: z.string().cuid('ID template non valido'),
+  ccEmails: z.array(z.string().email('Formato email non valido')).optional().default([]),
+})
+
 // Funzioni di validazione
 export const validateCreateEmail = (data: unknown) => {
   return createEmailSchema.safeParse(data)
@@ -80,4 +100,16 @@ export const validateEmailFilters = (data: unknown) => {
 
 export const validateEmailId = (data: unknown) => {
   return emailIdSchema.safeParse(data)
+}
+
+export const validateEmailPreview = (data: unknown) => {
+  return emailPreviewSchema.safeParse(data)
+}
+
+export const validateSendSingleEmail = (data: unknown) => {
+  return sendSingleEmailSchema.safeParse(data)
+}
+
+export const validateSendBulkEmail = (data: unknown) => {
+  return sendBulkEmailSchema.safeParse(data)
 }

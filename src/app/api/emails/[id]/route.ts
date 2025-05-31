@@ -78,8 +78,8 @@ export async function PUT(
 
     const service = getEmailService()
     
-    // Validazione business rules per l'update
-    const businessErrors = await service.validateBusinessRules(validationResult.data)
+    // Validazione business rules per l'update (passando l'ID corrente)
+    const businessErrors = await service.validateBusinessRules(validationResult.data, idResult.data.id)
     
     if (businessErrors.length > 0) {
       return NextResponse.json(

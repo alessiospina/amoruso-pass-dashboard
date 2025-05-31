@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getIngressoService } from '@/container/ingresso.container'
+import { getEmailNotificationService } from '@/container/email.container'
 import { 
   validateCreateIngresso, 
   validateIngressoFilters, 
@@ -102,6 +103,25 @@ export async function POST(request: NextRequest) {
     }
 
     const ingresso = await service.createIngresso(validationResult.data)
+
+    // Invio automatico email per nuovo ingresso
+    try {
+      const emailNotificationService = getEmailNotificationService()
+      const emailResults = await emailNotificationService.sendAutomaticEmailsForNewIngresso(ingresso)
+      
+      if (emailResults.length === 0) {
+        console.log(`Nessun template email configurato - ingresso ${ingresso.id} creato senza invio email`)
+      } else {
+        // Log risultati email
+        const successCount = emailResults.filter(r => r.success).length
+        const failureCount = emailResults.filter(r => !r.success).length
+        
+        console.log(`Email inviate per ingresso ${ingresso.id}: ${successCount} successi, ${failureCount} fallimenti`)
+      }
+    } catch (emailError) {
+      // Non bloccare la creazione dell'ingresso se l'email fallisce
+      console.error('Errore nell\'invio email automatico:', emailError)
+    }
 
     return NextResponse.json(ingresso, { status: 201 })
   } catch (error) {

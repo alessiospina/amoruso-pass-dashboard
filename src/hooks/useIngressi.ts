@@ -18,8 +18,6 @@ import {
   isSuccessResult,
   isValidationErrorResult,
   isBusinessRuleErrorResult,
-  ValidationErrorResult,
-  BusinessRuleErrorResult,
 } from '@/common/result'
 
 interface ApiErrorResponse {
@@ -97,10 +95,10 @@ export function useIngressi(
         // Gestisci diversi tipi di errore in base al response
         if (response.status === 400 && responseData.details) {
           // Errore di validazione
-          return ValidationErrorResult.fromZodError(responseData.details)
+          return ResultFactory.error(responseData.details)
         } if (response.status === 422 && responseData.details) {
           // Errore di business rules
-          return BusinessRuleErrorResult.fromMessages(responseData.details)
+          return ResultFactory.error(responseData.details)
         }
         // Errore generico
         return ResultFactory.error(responseData.error || 'Errore nella creazione')
@@ -132,9 +130,9 @@ export function useIngressi(
 
       if (!response.ok) {
         if (response.status === 400 && responseData.details) {
-          return ValidationErrorResult.fromZodError(responseData.details)
+          return ResultFactory.error(responseData.details)
         } if (response.status === 422 && responseData.details) {
-          return BusinessRuleErrorResult.fromMessages(responseData.details)
+          return ResultFactory.error(responseData.details)
         } if (response.status === 404) {
           return ResultFactory.error('Ingresso non trovato')
         }

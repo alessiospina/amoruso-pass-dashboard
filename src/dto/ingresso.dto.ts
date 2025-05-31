@@ -2,8 +2,8 @@ export interface CreateIngressoDTO {
   email: string
   ragione_sociale: string
   targa: string
-  partita_iva: string
-  indirizzo: string
+  partita_iva?: string
+  indirizzo?: string
   importo: number
 }
 

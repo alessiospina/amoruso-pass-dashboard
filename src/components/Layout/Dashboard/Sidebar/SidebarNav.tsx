@@ -43,8 +43,8 @@ export default async function SidebarNav() {
       <SidebarNavItem icon={faFileLines} href="/visualizza">
         Visualizza
       </SidebarNavItem>
-      <SidebarNavItem icon={faEnvelope} href="/imposta-email">
-        Imposta Email
+      <SidebarNavItem icon={faEnvelope} href="/email-management">
+        Gestione Email
       </SidebarNavItem>
     </ul>
   )

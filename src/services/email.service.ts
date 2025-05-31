@@ -91,13 +91,18 @@ export class EmailService {
     return this.emailRepository.search(query.trim(), limit > 50 ? 50 : limit)
   }
 
-  async validateBusinessRules(data: CreateEmailDTO | UpdateEmailDTO): Promise<string[]> {
+  async validateBusinessRules(data: CreateEmailDTO | UpdateEmailDTO, currentId?: string): Promise<string[]> {
     const errors: string[] = []
 
-    // Business rule: controlla duplicati per nome
+    // Business rule: controlla duplicati per nome (escludendo l'ID corrente)
     if (data.name) {
       const existing = await this.emailRepository.findByName(data.name)
-      if (existing.length > 0) {
+      // Se stiamo aggiornando, escludiamo l'ID corrente dai duplicati
+      const duplicates = currentId 
+        ? existing.filter(email => email.id !== currentId)
+        : existing
+      
+      if (duplicates.length > 0) {
         errors.push('Esiste già un template con questo nome')
       }
     }

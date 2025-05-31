@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { PrismaIngressoRepository } from '@/repositories/ingresso.repository'
 import { IngressoService } from '@/services/ingresso.service'
+import { getEmailNotificationService } from './email.container'
 
 // Container per Dependency Injection
 class IngressoContainer {
@@ -19,7 +20,8 @@ class IngressoContainer {
   getIngressoService(): IngressoService {
     if (!this._ingressoService) {
       const repository = new PrismaIngressoRepository(prisma)
-      this._ingressoService = new IngressoService(repository)
+      const emailNotificationService = getEmailNotificationService()
+      this._ingressoService = new IngressoService(repository, emailNotificationService)
     }
     return this._ingressoService
   }
