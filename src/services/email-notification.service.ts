@@ -4,6 +4,7 @@ import { EmailService } from './email.service'
 import { EmailRepository } from '@/repositories/email.repository'
 import { CreateEmailDTO, UpdateEmailDTO, EmailFiltersDTO } from '@/dto/email.dto'
 import { PaginationDTO, PaginatedResultDTO } from '@/dto/ingresso.dto'
+import { replaceAllPlaceholders } from '@/constants/email-replacements'
 
 export interface EmailNotificationStatus {
   success: boolean
@@ -241,18 +242,10 @@ export class EmailNotificationService {
 
   /**
    * Sostituisce i placeholder nel testo con i dati dell'ingresso
+   * Usa il nuovo sistema di replacement con formato $CAMPO$
    */
   private replacePlaceholders(text: string, ingresso: Ingresso): string {
-    return text
-      .replace(/\{\{email\}\}/g, ingresso.email)
-      .replace(/\{\{ragione_sociale\}\}/g, ingresso.ragione_sociale)
-      .replace(/\{\{targa\}\}/g, ingresso.targa)
-      .replace(/\{\{partita_iva\}\}/g, ingresso.partita_iva || '')
-      .replace(/\{\{indirizzo\}\}/g, ingresso.indirizzo || '')
-      .replace(/\{\{importo\}\}/g, `€${ingresso.importo.toFixed(2)}`)
-      .replace(/\{\{created_at\}\}/g, ingresso.created_at.toLocaleDateString('it-IT'))
-      .replace(/\{\{updated_at\}\}/g, ingresso.updated_at.toLocaleDateString('it-IT'))
-      .replace(/\{\{id\}\}/g, ingresso.id)
+    return replaceAllPlaceholders(text, ingresso)
   }
 
   /**

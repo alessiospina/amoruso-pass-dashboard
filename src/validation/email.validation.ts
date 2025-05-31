@@ -20,7 +20,7 @@ export const createEmailSchema = z.object({
   body: z
     .string()
     .min(1, 'Corpo email è obbligatorio')
-    .max(10000, 'Corpo email troppo lungo')
+    .max(50000, 'Corpo email troppo lungo (massimo 50.000 caratteri)')
     .trim(),
   isActive: z.boolean().optional().default(true),
 })
@@ -47,7 +47,7 @@ export const updateEmailSchema = z.object({
   body: z
     .string()
     .min(1, 'Corpo email è obbligatorio')
-    .max(10000, 'Corpo email troppo lungo')
+    .max(50000, 'Corpo email troppo lungo (massimo 50.000 caratteri)')
     .trim()
     .optional(),
   isActive: z.boolean().optional(),

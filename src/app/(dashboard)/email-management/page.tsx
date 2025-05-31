@@ -3,14 +3,22 @@
 import React, { useState, useEffect } from 'react'
 import { 
   Container, Row, Col, Card, Button, Alert, Form, Modal, Badge, 
-  Toast, ToastContainer, Table, Spinner, Nav
+  Toast, ToastContainer, Table, Spinner, Nav, Accordion, OverlayTrigger, Tooltip
 } from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faEnvelope, faSave, faTrash, faCheck, faTimes, faPlus, faEdit, 
   faToggleOn, faToggleOff, faPaperPlane, faExclamationTriangle,
-  faServer, faSync
+  faServer, faSync, faCopy, faEye, faInfoCircle
 } from '@fortawesome/free-solid-svg-icons'
+import { 
+  EMAIL_REPLACEMENTS, 
+  getReplacementsByCategory, 
+  CATEGORY_LABELS,
+  findReplacementsInText,
+  validateReplacements,
+  type ReplacementDefinition
+} from '@/constants/email-replacements'
 
 interface EmailChip {
   email: string
@@ -64,6 +72,10 @@ export default function EmailManagementPage() {
   const [subject, setSubject] = useState('')
   const [body, setBody] = useState('')
   const [isActive, setIsActive] = useState(true)
+  
+  // Replacement Analytics
+  const [bodyReplacements, setBodyReplacements] = useState<{ valid: string[]; invalid: string[] }>({ valid: [], invalid: [] })
+  const [subjectReplacements, setSubjectReplacements] = useState<{ valid: string[]; invalid: string[] }>({ valid: [], invalid: [] })
   
   // Test Email
   const [testEmail, setTestEmail] = useState('')
@@ -167,6 +179,55 @@ export default function EmailManagementPage() {
     emailsFromPaste.forEach(email => addEmail(email))
   }
 
+  // ==================== REPLACEMENT MANAGEMENT ====================
+
+  const updateReplacementAnalysis = () => {
+    setBodyReplacements(validateReplacements(body))
+    setSubjectReplacements(validateReplacements(subject))
+  }
+
+  useEffect(() => {
+    updateReplacementAnalysis()
+  }, [body, subject])
+
+  const insertReplacementInBody = (replacement: string) => {
+    const textarea = document.getElementById('emailBodyTextarea') as HTMLTextAreaElement
+    if (textarea) {
+      const start = textarea.selectionStart
+      const end = textarea.selectionEnd
+      const newValue = body.substring(0, start) + replacement + body.substring(end)
+      setBody(newValue)
+      
+      // Rimetti il focus e posiziona il cursore dopo il replacement inserito
+      setTimeout(() => {
+        textarea.focus()
+        textarea.setSelectionRange(start + replacement.length, start + replacement.length)
+      }, 0)
+    } else {
+      // Fallback: aggiungi alla fine
+      setBody(body + replacement)
+    }
+  }
+
+  const insertReplacementInSubject = (replacement: string) => {
+    const input = document.getElementById('emailSubjectInput') as HTMLInputElement
+    if (input) {
+      const start = input.selectionStart || 0
+      const end = input.selectionEnd || 0
+      const newValue = subject.substring(0, start) + replacement + subject.substring(end)
+      setSubject(newValue)
+      
+      // Rimetti il focus e posiziona il cursore dopo il replacement inserito
+      setTimeout(() => {
+        input.focus()
+        input.setSelectionRange(start + replacement.length, start + replacement.length)
+      }, 0)
+    } else {
+      // Fallback: aggiungi alla fine
+      setSubject(subject + replacement)
+    }
+  }
+
   // ==================== FORM VALIDATION ====================
 
   const validateForm = (): boolean => {
@@ -229,6 +290,8 @@ export default function EmailManagementPage() {
     setSubjectError('')
     setBodyError('')
     setFormError(null)
+    setBodyReplacements({ valid: [], invalid: [] })
+    setSubjectReplacements({ valid: [], invalid: [] })
   }
 
   const handleCreate = () => {
@@ -269,6 +332,8 @@ export default function EmailManagementPage() {
         isActive,
       }
 
+      console.log('Invio dati:', emailData) // Debug log
+
       const url = editingTemplate ? `/api/emails/${editingTemplate.id}` : '/api/emails'
       const method = editingTemplate ? 'PUT' : 'POST'
 
@@ -278,9 +343,21 @@ export default function EmailManagementPage() {
         body: JSON.stringify(emailData),
       })
 
+      console.log('Response status:', response.status) // Debug log
+
+      const responseText = await response.text()
+      console.log('Response body:', responseText) // Debug log
+
+      let data
+      try {
+        data = JSON.parse(responseText)
+      } catch (parseError) {
+        console.error('Errore parsing JSON:', parseError)
+        throw new Error(`Errore del server: risposta non valida. Status: ${response.status}. Body: ${responseText.substring(0, 200)}...`)
+      }
+
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Errore durante il salvataggio')
+        throw new Error(data.error || `Errore HTTP ${response.status}`)
       }
 
       setSuccessMessage(`Template ${editingTemplate ? 'modificato' : 'creato'} con successo!`)
@@ -290,6 +367,7 @@ export default function EmailManagementPage() {
       setEditingTemplate(null)
       fetchTemplates()
     } catch (err) {
+      console.error('Errore handleSubmit:', err)
       setFormError(err instanceof Error ? err.message : 'Errore imprevisto')
     } finally {
       setFormLoading(false)
@@ -705,8 +783,29 @@ export default function EmailManagementPage() {
 
             {/* Oggetto Email */}
             <Form.Group className="mb-3">
-              <Form.Label>Oggetto Email *</Form.Label>
+              <div className="d-flex align-items-center justify-content-between mb-2">
+                <Form.Label className="mb-0">Oggetto Email *</Form.Label>
+                <div className="d-flex gap-1">
+                  {EMAIL_REPLACEMENTS.slice(0, 4).map((replacement) => (
+                    <OverlayTrigger
+                      key={replacement.key}
+                      placement="top"
+                      overlay={<Tooltip>{replacement.label}</Tooltip>}
+                    >
+                      <Button
+                        variant="outline-secondary"
+                        size="sm"
+                        onClick={() => insertReplacementInSubject(replacement.key)}
+                        disabled={formLoading}
+                      >
+                        {replacement.key}
+                      </Button>
+                    </OverlayTrigger>
+                  ))}
+                </div>
+              </div>
               <Form.Control
+                id="emailSubjectInput"
                 type="text"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
@@ -718,30 +817,127 @@ export default function EmailManagementPage() {
               <Form.Control.Feedback type="invalid">
                 {subjectError}
               </Form.Control.Feedback>
+              {subjectReplacements.valid.length > 0 && (
+                <div className="mt-1">
+                  <small className="text-success">
+                    <FontAwesomeIcon icon={faCheck} className="me-1" />
+                    Replacement trovati: {subjectReplacements.valid.join(', ')}
+                  </small>
+                </div>
+              )}
+              {subjectReplacements.invalid.length > 0 && (
+                <div className="mt-1">
+                  <small className="text-danger">
+                    <FontAwesomeIcon icon={faTimes} className="me-1" />
+                    Replacement non validi: {subjectReplacements.invalid.join(', ')}
+                  </small>
+                </div>
+              )}
             </Form.Group>
 
-            {/* Corpo Email */}
-            <Form.Group className="mb-3">
-              <Form.Label>Corpo Email *</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={8}
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                placeholder="Scrivi qui il contenuto dell'email..."
-                required
-                disabled={formLoading}
-                isInvalid={!!bodyError}
-                style={{ resize: 'vertical' }}
-              />
-              <Form.Control.Feedback type="invalid">
-                {bodyError}
-              </Form.Control.Feedback>
-              <Form.Text className="text-muted">
-                Puoi utilizzare placeholder: {'{'}email{'}'}, {'{'}ragione_sociale{'}'}, {'{'}targa{'}'}, 
-                {'{'}partita_iva{'}'}, {'{'}indirizzo{'}'}, {'{'}importo{'}'}, {'{'}created_at{'}'}, {'{'}id{'}'}.
-              </Form.Text>
-            </Form.Group>
+            {/* Corpo Email con Replacement */}
+            <Row>
+              <Col md={8}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Corpo Email *</Form.Label>
+                  <Form.Control
+                    id="emailBodyTextarea"
+                    as="textarea"
+                    rows={12}
+                    value={body}
+                    onChange={(e) => setBody(e.target.value)}
+                    placeholder="Scrivi qui il contenuto dell'email..."
+                    required
+                    disabled={formLoading}
+                    isInvalid={!!bodyError}
+                    style={{ resize: 'vertical' }}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {bodyError}
+                  </Form.Control.Feedback>
+                  
+                  {/* Statistiche Replacement */}
+                  <div className="mt-2">
+                    {bodyReplacements.valid.length > 0 && (
+                      <div className="mb-1">
+                        <small className="text-success">
+                          <FontAwesomeIcon icon={faCheck} className="me-1" />
+                          Replacement validi: {bodyReplacements.valid.length}
+                        </small>
+                      </div>
+                    )}
+                    {bodyReplacements.invalid.length > 0 && (
+                      <div className="mb-1">
+                        <small className="text-danger">
+                          <FontAwesomeIcon icon={faTimes} className="me-1" />
+                          Replacement non validi: {bodyReplacements.invalid.join(', ')}
+                        </small>
+                      </div>
+                    )}
+                  </div>
+                </Form.Group>
+              </Col>
+              
+              <Col md={4}>
+                <div className="mb-3">
+                  <div className="d-flex align-items-center mb-2">
+                    <FontAwesomeIcon icon={faInfoCircle} className="me-2 text-info" />
+                    <strong>Replacement Disponibili</strong>
+                  </div>
+                  <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                    <Accordion>
+                      {Object.entries(getReplacementsByCategory()).map(([category, replacements]) => (
+                        <Accordion.Item key={category} eventKey={category}>
+                          <Accordion.Header>
+                            <Badge bg="secondary" className="me-2">
+                              {replacements.length}
+                            </Badge>
+                            {CATEGORY_LABELS[category]}
+                          </Accordion.Header>
+                          <Accordion.Body>
+                            <div className="d-grid gap-2">
+                              {replacements.map((replacement) => (
+                                <div key={replacement.key}>
+                                  <OverlayTrigger
+                                    placement="left"
+                                    overlay={
+                                      <Tooltip>
+                                        <strong>{replacement.label}</strong><br/>
+                                        {replacement.description}<br/>
+                                        <em>Esempio: {replacement.example}</em>
+                                      </Tooltip>
+                                    }
+                                  >
+                                    <Button
+                                      variant="outline-primary"
+                                      size="sm"
+                                      className="text-start"
+                                      onClick={() => insertReplacementInBody(replacement.key)}
+                                      disabled={formLoading}
+                                    >
+                                      <FontAwesomeIcon icon={faCopy} className="me-1" />
+                                      {replacement.key}
+                                    </Button>
+                                  </OverlayTrigger>
+                                  <div className="small text-muted mt-1">
+                                    {replacement.label}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </Accordion.Body>
+                        </Accordion.Item>
+                      ))}
+                    </Accordion>
+                  </div>
+                  
+                  <Alert variant="info" className="mt-3 small">
+                    <FontAwesomeIcon icon={faInfoCircle} className="me-1" />
+                    Clicca sui replacement per inserirli nel testo. I replacement verranno automaticamente sostituiti con i dati reali al momento dell'invio.
+                  </Alert>
+                </div>
+              </Col>
+            </Row>
 
             {/* Stato Attivo */}
             <Form.Group className="mb-3">
