@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { Card, Table, Row, Col, Spinner, Alert, Button, Form, Modal, Toast, ToastContainer } from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEye, faChevronLeft, faChevronRight, faTrash, faEdit, faCheck } from '@fortawesome/free-solid-svg-icons'
+import { faEye, faChevronLeft, faChevronRight, faTrash, faEdit, faCheck, faEnvelope } from '@fortawesome/free-solid-svg-icons'
 import { validateCreateIngresso } from '@/validation/ingresso.validation'
 
 interface Ingresso {
@@ -56,6 +56,11 @@ export default function VisualizzaIngressiPage() {
   const [editTouchedFields, setEditTouchedFields] = useState<Set<string>>(new Set())
   const [editImportoDisplayValue, setEditImportoDisplayValue] = useState<string>('')
   const [showEditSuccessToast, setShowEditSuccessToast] = useState(false)
+  
+  // Nuovi stati per la modale di conferma email
+  const [showEmailConfirmModal, setShowEmailConfirmModal] = useState(false)
+  const [updatedIngressoForEmail, setUpdatedIngressoForEmail] = useState<Ingresso | null>(null)
+  const [emailSending, setEmailSending] = useState(false)
 
   const fetchIngressi = async (page: number = 1, pageLimit: number = 10) => {
     try {
@@ -305,7 +310,10 @@ export default function VisualizzaIngressiPage() {
       
       setShowEditModal(false)
       setEditingIngresso(null)
-      setShowEditSuccessToast(true)
+      
+      // Mostra modale di conferma per l'invio email
+      setUpdatedIngressoForEmail(updatedIngresso)
+      setShowEmailConfirmModal(true)
     } catch (err) {
       setEditError(err instanceof Error ? err.message : 'Errore imprevisto')
     } finally {
@@ -321,6 +329,44 @@ export default function VisualizzaIngressiPage() {
       setEditFieldErrors({})
       setEditTouchedFields(new Set())
     }
+  }
+
+  // Funzioni per gestire l'email di aggiornamento
+  const handleSendUpdateEmail = async () => {
+    if (!updatedIngressoForEmail) return
+
+    try {
+      setEmailSending(true)
+
+      const response = await fetch('/api/send-update-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ingressoId: updatedIngressoForEmail.id
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Errore durante l\'invio dell\'email')
+      }
+
+      setShowEditSuccessToast(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore nell\'invio email')
+    } finally {
+      setEmailSending(false)
+      setShowEmailConfirmModal(false)
+      setUpdatedIngressoForEmail(null)
+    }
+  }
+
+  const handleSkipUpdateEmail = () => {
+    setShowEmailConfirmModal(false)
+    setUpdatedIngressoForEmail(null)
+    setShowEditSuccessToast(true)
   }
 
   const formatDate = (dateString: string) => {
@@ -722,6 +768,88 @@ export default function VisualizzaIngressiPage() {
         </Form>
       </Modal>
 
+      {/* Modale di Conferma Email Aggiornamento */}
+      <Modal 
+        show={showEmailConfirmModal} 
+        onHide={() => !emailSending && handleSkipUpdateEmail()} 
+        size="md"
+        backdrop={emailSending ? 'static' : true}
+        keyboard={!emailSending}
+      >
+        <Modal.Header closeButton={!emailSending}>
+          <Modal.Title>
+            <FontAwesomeIcon icon={faCheck} className="me-2 text-success" />
+            Ingresso Aggiornato
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="text-center mb-3">
+            <FontAwesomeIcon icon={faCheck} size="3x" className="text-success mb-3" />
+            <h5>Ingresso modificato con successo!</h5>
+          </div>
+          
+          {updatedIngressoForEmail && (
+            <div className="bg-light p-3 rounded mb-3">
+              <h6 className="mb-2">Dati aggiornati:</h6>
+              <div className="row">
+                <div className="col-6">
+                  <small className="text-muted">Ragione Sociale:</small><br/>
+                  <strong>{updatedIngressoForEmail.ragione_sociale}</strong>
+                </div>
+                <div className="col-6">
+                  <small className="text-muted">Targa:</small><br/>
+                  <strong>{updatedIngressoForEmail.targa}</strong>
+                </div>
+                <div className="col-6 mt-2">
+                  <small className="text-muted">Email:</small><br/>
+                  <strong>{updatedIngressoForEmail.email}</strong>
+                </div>
+                <div className="col-6 mt-2">
+                  <small className="text-muted">Importo:</small><br/>
+                  <strong className="text-success">{formatImporto(updatedIngressoForEmail.importo)}</strong>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <Alert variant="info" className="mb-3">
+            <FontAwesomeIcon icon={faEdit} className="me-2" />
+            <strong>Desideri inviare una notifica email di aggiornamento?</strong>
+            <br/>
+            <small className="text-muted">
+              Verrà inviata una email agli amministratori con i dati aggiornati dell'ingresso.
+              L'oggetto conterrà il suffisso [AGGIORNATO] per distinguerla dai nuovi ingressi.
+            </small>
+          </Alert>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button 
+            variant="secondary" 
+            onClick={handleSkipUpdateEmail}
+            disabled={emailSending}
+          >
+            No, grazie
+          </Button>
+          <Button 
+            variant="primary" 
+            onClick={handleSendUpdateEmail}
+            disabled={emailSending}
+          >
+            {emailSending ? (
+              <>
+                <Spinner as="span" animation="border" size="sm" className="me-2" />
+                Invio in corso...
+              </>
+            ) : (
+              <>
+                <FontAwesomeIcon icon={faEdit} className="me-2" />
+                Sì, invia email
+              </>
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
       {/* Toast per successo modifica */}
       <ToastContainer 
         position="top-end" 
@@ -740,7 +868,7 @@ export default function VisualizzaIngressiPage() {
             <strong className="me-auto">Successo!</strong>
           </Toast.Header>
           <Toast.Body>
-            Ingresso modificato con successo!
+            Ingresso modificato con successo! {updatedIngressoForEmail ? 'Email di aggiornamento inviata.' : ''}
           </Toast.Body>
         </Toast>
       </ToastContainer>

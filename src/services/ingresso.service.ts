@@ -7,12 +7,10 @@ import {
   PaginationDTO,
   PaginatedResultDTO,
 } from '@/dto/ingresso.dto'
-import { EmailNotificationService } from './email-notification.service'
 
 export class IngressoService {
   constructor(
-    private ingressoRepository: IngressoRepository,
-    private emailNotificationService?: EmailNotificationService
+    private ingressoRepository: IngressoRepository
   ) {}
 
   async createIngresso(data: CreateIngressoDTO): Promise<Ingresso> {
@@ -29,17 +27,6 @@ export class IngressoService {
 
       // Crea l'ingresso
       const ingresso = await this.ingressoRepository.create(normalizedData)
-
-      // Invia le email di notifica (se il servizio è disponibile)
-      if (this.emailNotificationService) {
-        try {
-          const emailResults = await this.emailNotificationService.sendNotificationsForNewIngresso(ingresso)
-          console.log(`Email inviate per nuovo ingresso ${ingresso.id}:`, emailResults)
-        } catch (emailError) {
-          console.error('Errore nell\'invio email per nuovo ingresso:', emailError)
-          // Non bloccare la creazione dell'ingresso se l'email fallisce
-        }
-      }
 
       return ingresso
     } catch (error) {

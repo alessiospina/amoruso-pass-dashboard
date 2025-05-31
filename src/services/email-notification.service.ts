@@ -139,6 +139,60 @@ export class EmailNotificationService {
   }
 
   /**
+   * Invia email per un singolo ingresso usando un template personalizzato
+   * Simile a sendEmailForIngresso ma accetta un template object invece dell'ID
+   */
+  async sendEmailForIngressoWithTemplate(
+    ingressoId: string, 
+    template: Email, 
+    ingresso?: Ingresso
+  ): Promise<EmailSendResult> {
+    try {
+      if (!template.isActive) {
+        return {
+          success: false,
+          error: 'Template non attivo',
+          templateUsed: template.name,
+        }
+      }
+
+      // Se l'ingresso non è fornito, dovrebbe essere recuperato dal repository
+      if (!ingresso) {
+        throw new Error('Dati ingresso non forniti')
+      }
+
+      // Parse recipients from template
+      const recipients = this.parseRecipients(template.recipients)
+      
+      // Replace placeholders in subject and body with ingresso data
+      const processedSubject = this.replacePlaceholders(template.subject, ingresso)
+      const processedBody = this.replacePlaceholders(template.body, ingresso)
+
+      // Prepare email options
+      const emailOptions = {
+        to: recipients, // Destinatari principali sono i recipients del template
+        cc: [ingresso.email], // CC è l'email dell'ingresso
+        subject: processedSubject,
+        html: processedBody,
+        text: this.stripHtml(processedBody),
+      }
+
+      await this.mailerService.sendEmail(emailOptions)
+      
+      return {
+        success: true,
+        templateUsed: template.name,
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: `Errore nell'invio: ${error}`,
+        templateUsed: template.name,
+      }
+    }
+  }
+
+  /**
    * Invia email per un singolo ingresso usando un template specifico
    * Destinatari: recipients del template
    * CC: email dell'ingresso
