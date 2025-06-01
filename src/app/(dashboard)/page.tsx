@@ -127,6 +127,23 @@ export default function DashboardPage() {
 
   return (
       <div className="animated fadeIn">
+        {/* Header */}
+        <Row className="mb-4">
+          <Col>
+            <div className="d-flex align-items-center justify-content-between">
+              <div>
+                <h1>
+                  <FontAwesomeIcon icon={faGauge} className="me-2" />
+                  Dashboard
+                </h1>
+                <p className="text-muted">
+                  Panoramica generale delle statistiche e attività degli ingressi
+                </p>
+              </div>
+            </div>
+          </Col>
+        </Row>
+
         {/* Cards Overview */}
         <Row className="mb-4">
           <Col xs={12} sm={6} xl={3} className="mb-3">

@@ -11,16 +11,6 @@ export default async function HeaderFeaturedNav() {
           <NavLink className="p-2">{dict.featured_nav.dashboard}</NavLink>
         </Link>
       </NavItem>
-      <NavItem>
-        <Link href="#" passHref legacyBehavior>
-          <NavLink className="p-2">{dict.featured_nav.users}</NavLink>
-        </Link>
-      </NavItem>
-      <NavItem>
-        <Link href="#" passHref legacyBehavior>
-          <NavLink className="p-2">{dict.featured_nav.settings}</NavLink>
-        </Link>
-      </NavItem>
     </Nav>
   )
 }

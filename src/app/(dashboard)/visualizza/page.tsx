@@ -388,16 +388,32 @@ export default function VisualizzaIngressiPage() {
 
   return (
     <div className="animated fadeIn">
+      {/* Header */}
+      <Row className="mb-4">
+        <Col>
+          <div className="d-flex align-items-center justify-content-between">
+            <div>
+              <h1>
+                <FontAwesomeIcon icon={faEye} className="me-2" />
+                Visualizza Ingressi
+              </h1>
+              <p className="text-muted">
+                Consulta, modifica ed elimina gli ingressi registrati nel sistema
+              </p>
+            </div>
+            <div className="text-muted">
+              Totale: {total} ingressi
+            </div>
+          </div>
+        </Col>
+      </Row>
+
       <Row>
         <Col xs={12}>
           <Card className="shadow-sm">
             <Card.Header className="d-flex align-items-center justify-content-between bg-primary text-white">
               <div className="d-flex align-items-center">
-                <FontAwesomeIcon icon={faEye} className="me-2" />
-                <strong>Visualizza Ingressi</strong>
-              </div>
-              <div className="text-white-50">
-                Totale: {total} ingressi
+                <strong>Lista Ingressi</strong>
               </div>
             </Card.Header>
             <Card.Body className="p-0">

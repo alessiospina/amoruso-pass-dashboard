@@ -325,13 +325,29 @@ export default function ImpostaEmailPage() {
 
   return (
     <div className="animated fadeIn">
+      {/* Header */}
+      <Row className="mb-4">
+        <Col>
+          <div className="d-flex align-items-center justify-content-between">
+            <div>
+              <h1>
+                <FontAwesomeIcon icon={faEnvelope} className="me-2" />
+                Imposta Email
+              </h1>
+              <p className="text-muted">
+                Configura e gestisci i template email per le notifiche automatiche
+              </p>
+            </div>
+          </div>
+        </Col>
+      </Row>
+
       <Row>
         <Col xs={12}>
           <Card className="shadow-sm">
             <Card.Header className="d-flex align-items-center justify-content-between bg-success text-white">
               <div className="d-flex align-items-center">
-                <FontAwesomeIcon icon={faEnvelope} className="me-2" />
-                <strong>Gestione Template Email</strong>
+                <strong>Template Email</strong>
               </div>
               <Button 
                 variant="light" 

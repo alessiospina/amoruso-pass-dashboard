@@ -4,7 +4,6 @@ import HeaderSidebarToggler from '@/components/Layout/Dashboard/Header/HeaderSid
 import HeaderFeaturedNav from '@/components/Layout/Dashboard/Header/HeaderFeaturedNav'
 import HeaderNotificationNav from '@/components/Layout/Dashboard/Header/HeaderNotificationNav'
 import HeaderProfileNav from '@/components/Layout/Dashboard/Header/HeaderProfileNav'
-import Breadcrumb from '@/components/Layout/Dashboard/Breadcrumb/Breadcrumb'
 
 export default function Header() {
   return (
@@ -26,10 +25,6 @@ export default function Header() {
         <div className="header-nav ms-2">
           <HeaderProfileNav />
         </div>
-      </Container>
-      <div className="header-divider border-top my-2 mx-sm-n2" />
-      <Container fluid>
-        <Breadcrumb />
       </Container>
     </header>
   )
