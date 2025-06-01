@@ -11,10 +11,12 @@ export default function Header() {
       <Container fluid className="header-navbar d-flex align-items-center px-0">
         <HeaderSidebarToggler />
         <Link href="/" className="header-brand d-md-none">
-          <svg width="80" height="46">
-            <title>CoreUI Logo</title>
-            <use xlinkHref="/assets/brand/coreui.svg#full" />
-          </svg>
+          <img 
+            src="/assets/brand/amoruso-pass-logo-light.svg" 
+            alt="Amoruso Pass - Gestione Ingressi" 
+            height="40"
+            style={{ maxWidth: '140px' }}
+          />
         </Link>
         <div className="header-nav d-none d-md-flex">
           <HeaderFeaturedNav />

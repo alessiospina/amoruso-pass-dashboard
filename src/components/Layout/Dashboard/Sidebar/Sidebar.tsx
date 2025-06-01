@@ -5,6 +5,7 @@ import { faAngleLeft } from '@fortawesome/free-solid-svg-icons'
 import React, { useEffect, useState } from 'react'
 import classNames from 'classnames'
 import { Button } from 'react-bootstrap'
+import Link from 'next/link'
 import { useSidebar } from '@/components/Layout/Dashboard/SidebarProvider'
 
 export default function Sidebar({ children }: { children: React.ReactNode }) {
@@ -34,22 +35,24 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
       id="sidebar"
     >
       <div className="sidebar-brand d-none d-md-flex align-items-center justify-content-center">
-        <svg
-          className="sidebar-brand-full"
-          width="118"
-          height="46"
-        >
-          <title>Amoruso Dashboard</title>
-          <use xlinkHref="/assets/brand/coreui.svg#full" />
-        </svg>
-        <svg
-          className="sidebar-brand-narrow d-none"
-          width="46"
-          height="46"
-        >
-          <title>Amoruso Dashboard</title>
-          <use xlinkHref="/assets/brand/coreui.svg#signet" />
-        </svg>
+        <Link href="/" className="text-decoration-none">
+          <div className="sidebar-brand-full">
+            <img 
+              src="/assets/brand/amoruso-pass-logo.svg" 
+              alt="Amoruso Pass - Gestione Ingressi"
+              height="46"
+              style={{ maxWidth: '200px' }}
+            />
+          </div>
+          <div className="sidebar-brand-narrow d-none">
+            <img 
+              src="/assets/brand/amoruso-pass-icon.svg" 
+              alt="Amoruso Pass"
+              width="40"
+              height="40"
+            />
+          </div>
+        </Link>
       </div>
 
       <div className="sidebar-nav flex-fill border-top">

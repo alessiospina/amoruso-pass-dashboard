@@ -49,6 +49,25 @@ $sidebar-overlay-z-index: 1025;
   .sidebar-brand {
     flex: 0 0 $sidebar-brand-height;
     background: var(--sidebar-brand-background);
+
+    a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      
+      &:hover {
+        opacity: 0.9;
+        transition: opacity 0.2s ease;
+      }
+    }
+
+    img {
+      max-height: 90%;
+      height: auto;
+      object-fit: contain;
+    }
   }
 
   .sidebar-nav {
