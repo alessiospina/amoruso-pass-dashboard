@@ -5,6 +5,18 @@ import Negotiator from 'negotiator'
 import { NextMiddlewareResult } from 'next/dist/server/web/types'
 import { getLocales } from '@/locales/dictionary'
 import { defaultLocale } from '@/locales/config'
+import { jwtVerify } from 'jose'
+
+// Funzione per verificare il token JWT
+async function verifyJWTToken(token: string): Promise<boolean> {
+  try {
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret')
+    await jwtVerify(token, secret)
+    return true
+  } catch {
+    return false
+  }
+}
 
 export default async function middleware(request: NextRequest, event: NextFetchEvent) {
   const headers = { 'accept-language': request.headers.get('accept-language') ?? '' }
@@ -17,32 +29,46 @@ export default async function middleware(request: NextRequest, event: NextFetchE
     response.cookies.set('locale', locale)
   }
 
-  /*
-   * Match all request paths except for the ones starting with:
-   * - login
-   * - register
-   * - api/ingressi (per test API)
-   * - api/health
-   */
-  if (![
+  // Percorsi che non richiedono autenticazione
+  const publicPaths = [
     '/login',
     '/register',
     '/ads.txt',
-  ].includes(request.nextUrl.pathname) && 
-  !request.nextUrl.pathname.startsWith('/api/ingressi') &&
-  !request.nextUrl.pathname.startsWith('/api/health')) {
-    const res: NextMiddlewareResult = await withAuth(
-      // Response with local cookies
-      () => response,
-      {
-      // Matches the pages config in `[...nextauth]`
-        pages: {
-          signIn: '/login',
-        },
-      },
-    )(request as NextRequestWithAuth, event)
-    return res
+  ]
+
+  const isPublicPath = publicPaths.includes(request.nextUrl.pathname)
+  const isApiRoute = request.nextUrl.pathname.startsWith('/api/')
+
+  // Escludi percorsi pubblici e alcune API dal controllo di autenticazione
+  if (isPublicPath || 
+      request.nextUrl.pathname.startsWith('/api/ingressi') ||
+      request.nextUrl.pathname.startsWith('/api/health') ||
+      request.nextUrl.pathname.startsWith('/api/auth')) {
+    return response
   }
 
-  return response
+  // Per le rotte protette, verifica prima il token JWT
+  const jwtToken = request.cookies.get('auth-token')?.value
+
+  if (jwtToken) {
+    const isValidJWT = await verifyJWTToken(jwtToken)
+    if (isValidJWT) {
+      // Token JWT valido, consenti l'accesso
+      return response
+    }
+  }
+
+  // Se non c'è token JWT valido, usa NextAuth per la protezione delle route
+  const res: NextMiddlewareResult = await withAuth(
+    // Response with local cookies
+    () => response,
+    {
+      // Matches the pages config in `[...nextauth]`
+      pages: {
+        signIn: '/login',
+      },
+    },
+  )(request as NextRequestWithAuth, event)
+  
+  return res
 }

@@ -5,6 +5,7 @@ import { config } from '@fortawesome/fontawesome-svg-core'
 import '@fortawesome/fontawesome-svg-core/styles.css'
 import ProgressBar from '@/components/ProgressBar/ProgressBar'
 import DictionaryProvider from '@/locales/DictionaryProvider'
+import SessionProvider from '@/components/Providers/SessionProvider'
 import { getDictionary } from '@/locales/dictionary'
 import getTheme from '@/themes/theme'
 import { GoogleAnalytics } from '@next/third-parties/google'
@@ -32,9 +33,11 @@ export default async function RootLayout({
     <html lang="en" data-bs-theme={getTheme()}>
       <body>
         <ProgressBar />
-        <DictionaryProvider dictionary={dictionary}>
-          {children}
-        </DictionaryProvider>
+        <SessionProvider>
+          <DictionaryProvider dictionary={dictionary}>
+            {children}
+          </DictionaryProvider>
+        </SessionProvider>
         {vercelAnalytics && <Analytics />}
       </body>
       {gaMeasurementId !== '' && <GoogleAnalytics gaId={gaMeasurementId} />}

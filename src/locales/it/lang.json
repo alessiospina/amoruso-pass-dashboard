@@ -5,6 +5,7 @@
     "description": "Accedi al tuo account",
     "form": {
       "username": "Nome utente",
+      "email": "Email",
       "password": "Password",
       "submit": "Accedi"
     },

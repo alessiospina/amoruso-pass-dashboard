@@ -12,7 +12,8 @@
     "test": "start-server-and-test dev http://localhost:3000 cypress:run",
     "test:unit": "jest",
     "test:unit:watch": "jest --watch",
-    "seed:emails": "node prisma/seed-emails-simple.js"
+    "seed:emails": "node prisma/seed-emails-simple.js",
+    "create:admin": "node scripts/create-admin-user.js"
   },
   "dependencies": {
     "@formatjs/intl-localematcher": "^0.5.10",
@@ -26,11 +27,13 @@
     "@prisma/client": "^6.8.2",
     "@types/nodemailer": "^6.4.17",
     "@vercel/analytics": "^1.5.0",
+    "bcryptjs": "^3.0.2",
     "bootstrap": "^5.3.3",
     "chart.js": "^4.4.8",
     "classnames": "^2.5.1",
     "i18next": "^23.16.8",
     "js-cookie": "^3.0.5",
+    "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.14.1",
     "negotiator": "^0.6.4",
     "next": "^14.2.24",
@@ -50,8 +53,10 @@
     "zod-i18n-map": "^2.27.0"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
     "@types/jest": "^29.5.14",
     "@types/js-cookie": "^3.0.6",
+    "@types/jsonwebtoken": "^9.0.9",
     "@types/negotiator": "^0.6.3",
     "@types/node": "^20.17.23",
     "@types/react": "^18.3.18",

@@ -1,7 +1,7 @@
 'use client'
 
 import {
-  Alert, Button, Col, Form, FormControl, InputGroup, Row,
+  Alert, Button, Col, FormControl, InputGroup, Row,
 } from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUser } from '@fortawesome/free-regular-svg-icons'
@@ -9,53 +9,80 @@ import { faLock } from '@fortawesome/free-solid-svg-icons'
 import { useState } from 'react'
 import Link from 'next/link'
 import InputGroupText from 'react-bootstrap/InputGroupText'
-import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import useDictionary from '@/locales/dictionary-hook'
 
 export default function Login({ callbackUrl }: { callbackUrl: string }) {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const router = useRouter()
   const dict = useDictionary()
 
-  const login = async (formData: FormData) => {
+  const handleLogin = async () => {
+    console.log('🎯 Login started')
+    
+    if (!email || !password) {
+      setError('Email e password sono obbligatorie')
+      return
+    }
+
     setSubmitting(true)
+    setError('')
 
     try {
-      const res = await signIn('credentials', {
-        username: formData.get('username'),
-        password: formData.get('password'),
-        redirect: false,
-        callbackUrl,
+      console.log('📡 Sending login request...')
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+        credentials: 'include', // Importante per i cookie
       })
 
-      if (!res) {
-        setError('Login failed')
-        return
-      }
+      console.log('📡 Response status:', response.status)
+      const result = await response.json()
+      console.log('📡 Response data:', result)
 
-      const { ok, url, error: err } = res
-
-      if (!ok) {
-        if (err) {
-          setError(err)
-          return
+      if (result.success) {
+        console.log('✅ Login successful!')
+        
+        // Determina la URL di redirect
+        let redirectUrl = callbackUrl || '/'
+        
+        // Se callbackUrl è vuoto, usa la root
+        if (!redirectUrl || redirectUrl === '/login') {
+          redirectUrl = '/'
         }
-
-        setError('Login failed')
-        return
-      }
-
-      if (url) {
-        router.push(url)
+        
+        console.log('🎯 Redirect URL:', redirectUrl)
+        
+        // Aspetta un momento per assicurarsi che il cookie sia impostato
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
+        // Forza il refresh della pagina per aggiornare lo stato di autenticazione
+        console.log('🔄 Forcing page refresh and redirect...')
+        window.location.href = redirectUrl
+        
+      } else {
+        console.log('❌ Login failed:', result.message)
+        setError(result.message || 'Credenziali non valide')
       }
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message)
-      }
+      console.error('💥 Login error:', err)
+      setError('Errore di connessione')
     } finally {
+      console.log('🏁 Setting submitting to false')
       setSubmitting(false)
+    }
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      handleLogin()
     }
   }
 
@@ -69,39 +96,33 @@ export default function Login({ callbackUrl }: { callbackUrl: string }) {
       >
         {error}
       </Alert>
-      <Form action={login}>
+      
+      <div>
         <InputGroup className="mb-3">
           <InputGroupText>
-            <FontAwesomeIcon
-              icon={faUser}
-              fixedWidth
-            />
+            <FontAwesomeIcon icon={faUser} fixedWidth />
           </InputGroupText>
           <FormControl
-            name="username"
-            required
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder={dict.login.form.email || 'Email'}
             disabled={submitting}
-            placeholder={dict.login.form.username}
-            aria-label="Username"
-            defaultValue="Username"
+            onKeyPress={handleKeyPress}
           />
         </InputGroup>
 
         <InputGroup className="mb-3">
           <InputGroupText>
-            <FontAwesomeIcon
-              icon={faLock}
-              fixedWidth
-            />
+            <FontAwesomeIcon icon={faLock} fixedWidth />
           </InputGroupText>
           <FormControl
             type="password"
-            name="password"
-            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder={dict.login.form.password || 'Password'}
             disabled={submitting}
-            placeholder={dict.login.form.password}
-            aria-label="Password"
-            defaultValue="Password"
+            onKeyPress={handleKeyPress}
           />
         </InputGroup>
 
@@ -110,10 +131,10 @@ export default function Login({ callbackUrl }: { callbackUrl: string }) {
             <Button
               className="px-4"
               variant="primary"
-              type="submit"
+              onClick={handleLogin}
               disabled={submitting}
             >
-              {dict.login.form.submit}
+              {submitting ? 'Accesso...' : dict.login.form.submit}
             </Button>
           </Col>
           <Col xs={6} className="text-end">
@@ -122,7 +143,7 @@ export default function Login({ callbackUrl }: { callbackUrl: string }) {
             </Link>
           </Col>
         </Row>
-      </Form>
+      </div>
     </>
   )
 }

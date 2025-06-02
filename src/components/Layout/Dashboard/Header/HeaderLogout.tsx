@@ -1,14 +1,16 @@
 'use client'
 
-import { signOut } from 'next-auth/react'
+import { useJWTAuth } from '@/hooks/useJWTAuth'
 
 export default function HeaderLogout({ children }: { children: React.ReactNode }) {
-  const logout = async () => {
-    await signOut({ callbackUrl: '/login' })
+  const { logout } = useJWTAuth()
+
+  const handleLogout = async () => {
+    await logout()
   }
 
   return (
-    <div onClick={logout} onKeyDown={logout} role="button" tabIndex={0}>
+    <div onClick={handleLogout} onKeyDown={handleLogout} role="button" tabIndex={0}>
       {children}
     </div>
   )
