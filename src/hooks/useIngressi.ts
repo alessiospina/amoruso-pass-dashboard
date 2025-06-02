@@ -19,6 +19,7 @@ import {
   isValidationErrorResult,
   isBusinessRuleErrorResult,
 } from '@/common/result'
+import { apiGet, apiPost, apiPut, apiDelete } from '@/utils/api.utils'
 
 interface ApiErrorResponse {
   error: string;
@@ -56,14 +57,7 @@ export function useIngressi(
         }
       })
 
-      const response = await fetch(`/api/ingressi?${params.toString()}`)
-
-      if (!response.ok) {
-        const errorData: ApiErrorResponse = await response.json()
-        throw new Error(errorData.error || `Errore HTTP: ${response.status}`)
-      }
-
-      const result = await response.json()
+      const result = await apiGet<PaginatedResultDTO<Ingresso>>(`/api/ingressi?${params.toString()}`)
       setData(result)
       setError(null)
     } catch (err) {
@@ -81,35 +75,21 @@ export function useIngressi(
     ingressoData: CreateIngressoInput,
   ): Promise<ExtendedResult<Ingresso>> => {
     try {
-      const response = await fetch('/api/ingressi', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(ingressoData),
-      })
-
-      const responseData = await response.json()
-
-      if (!response.ok) {
-        // Gestisci diversi tipi di errore in base al response
-        if (response.status === 400 && responseData.details) {
-          // Errore di validazione
-          return ResultFactory.error(responseData.details)
-        } if (response.status === 422 && responseData.details) {
-          // Errore di business rules
-          return ResultFactory.error(responseData.details)
-        }
-        // Errore generico
-        return ResultFactory.error(responseData.error || 'Errore nella creazione')
-      }
-
+      const result = await apiPost<Ingresso>('/api/ingressi', ingressoData)
       await fetchIngressi() // Ricarica la lista
-      return ResultFactory.success(responseData as Ingresso)
+      return ResultFactory.success(result)
     } catch (err) {
-      return ResultFactory.error(
-        err instanceof Error ? err.message : 'Errore nella creazione',
-      )
+      const errorMessage = err instanceof Error ? err.message : 'Errore nella creazione'
+      
+      // Prova a parsare errori strutturati
+      if (errorMessage.includes('Dati non validi')) {
+        return ResultFactory.error('Errori di validazione')
+      }
+      if (errorMessage.includes('Violazione regole business')) {
+        return ResultFactory.error('Violazione regole business')
+      }
+      
+      return ResultFactory.error(errorMessage)
     }
   }
 
@@ -118,56 +98,39 @@ export function useIngressi(
     updateData: UpdateIngressoInput,
   ): Promise<ExtendedResult<Ingresso>> => {
     try {
-      const response = await fetch(`/api/ingressi/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updateData),
-      })
-
-      const responseData = await response.json()
-
-      if (!response.ok) {
-        if (response.status === 400 && responseData.details) {
-          return ResultFactory.error(responseData.details)
-        } if (response.status === 422 && responseData.details) {
-          return ResultFactory.error(responseData.details)
-        } if (response.status === 404) {
-          return ResultFactory.error('Ingresso non trovato')
-        }
-        return ResultFactory.error(responseData.error || 'Errore nell\'aggiornamento')
-      }
-
+      const result = await apiPut<Ingresso>(`/api/ingressi/${id}`, updateData)
       await fetchIngressi() // Ricarica la lista
-      return ResultFactory.success(responseData as Ingresso)
+      return ResultFactory.success(result)
     } catch (err) {
-      return ResultFactory.error(
-        err instanceof Error ? err.message : 'Errore nell\'aggiornamento',
-      )
+      const errorMessage = err instanceof Error ? err.message : 'Errore nell\'aggiornamento'
+      
+      if (errorMessage.includes('non trovato')) {
+        return ResultFactory.error('Ingresso non trovato')
+      }
+      if (errorMessage.includes('Dati non validi')) {
+        return ResultFactory.error('Errori di validazione')
+      }
+      if (errorMessage.includes('Violazione regole business')) {
+        return ResultFactory.error('Violazione regole business')
+      }
+      
+      return ResultFactory.error(errorMessage)
     }
   }
 
   const deleteIngresso = async (id: string): Promise<Result<void>> => {
     try {
-      const response = await fetch(`/api/ingressi/${id}`, {
-        method: 'DELETE',
-      })
-
-      if (!response.ok) {
-        const errorData: ApiErrorResponse = await response.json()
-        if (response.status === 404) {
-          return ResultFactory.error('Ingresso non trovato')
-        }
-        return ResultFactory.error(errorData.error || 'Errore nell\'eliminazione')
-      }
-
+      await apiDelete(`/api/ingressi/${id}`)
       await fetchIngressi() // Ricarica la lista
       return ResultFactory.success()
     } catch (err) {
-      return ResultFactory.error(
-        err instanceof Error ? err.message : 'Errore nell\'eliminazione',
-      )
+      const errorMessage = err instanceof Error ? err.message : 'Errore nell\'eliminazione'
+      
+      if (errorMessage.includes('non trovato')) {
+        return ResultFactory.error('Ingresso non trovato')
+      }
+      
+      return ResultFactory.error(errorMessage)
     }
   }
 
@@ -196,19 +159,10 @@ export function useIngresso(id: string | null) {
 
     try {
       setLoading(true)
-      const response = await fetch(`/api/ingressi/${id}`)
-
-      if (!response.ok) {
-        const errorData: ApiErrorResponse = await response.json()
-        const errorMessage = errorData.error || `Errore HTTP: ${response.status}`
-        setError(errorMessage)
-        return ResultFactory.error(errorMessage)
-      }
-
-      const data = await response.json()
+      const data = await apiGet<Ingresso>(`/api/ingressi/${id}`)
       setIngresso(data)
       setError(null)
-      return ResultFactory.success(data as Ingresso)
+      return ResultFactory.success(data)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Errore nel caricamento dell\'ingresso'
       setError(errorMessage)
@@ -239,19 +193,10 @@ export function useIngressiStats() {
   const fetchStats = async (): Promise<Result<IngressoStatsDTO>> => {
     try {
       setLoading(true)
-      const response = await fetch('/api/ingressi/stats')
-
-      if (!response.ok) {
-        const errorData: ApiErrorResponse = await response.json()
-        const errorMessage = errorData.error || `Errore HTTP: ${response.status}`
-        setError(errorMessage)
-        return ResultFactory.error(errorMessage)
-      }
-
-      const data = await response.json()
+      const data = await apiGet<IngressoStatsDTO>('/api/ingressi/stats')
       setStats(data)
       setError(null)
-      return ResultFactory.success(data as IngressoStatsDTO)
+      return ResultFactory.success(data)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Errore nel caricamento delle statistiche'
       setError(errorMessage)
@@ -297,20 +242,10 @@ export function useIngressiSearch() {
         limit: limit.toString(),
       })
 
-      const response = await fetch(`/api/ingressi/search?${params.toString()}`)
-
-      if (!response.ok) {
-        const errorData: ApiErrorResponse = await response.json()
-        const errorMessage = errorData.error || `Errore HTTP: ${response.status}`
-        setError(errorMessage)
-        setResults([])
-        return ResultFactory.error(errorMessage)
-      }
-
-      const data = await response.json()
+      const data = await apiGet<{results: Ingresso[]}>(`/api/ingressi/search?${params.toString()}`)
       setResults(data.results)
       setError(null)
-      return ResultFactory.success(data.results as Ingresso[])
+      return ResultFactory.success(data.results)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Errore nella ricerca'
       setError(errorMessage)

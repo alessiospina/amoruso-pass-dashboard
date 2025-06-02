@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getIngressoService } from '@/container/ingresso.container'
 import { prisma } from '@/lib/prisma'
+import { withAuth, AuthenticatedUser } from '@/middleware/auth.middleware'
 
 interface CorrelationData {
   email?: string
@@ -10,8 +11,10 @@ interface CorrelationData {
   indirizzo?: string
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
+    console.log(`[API] GET /suggestions/correlations - Utente autenticato: ${user.email}`)
+
     const { searchParams } = new URL(request.url)
     const field = searchParams.get('field')
     const value = searchParams.get('value')
@@ -93,4 +96,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

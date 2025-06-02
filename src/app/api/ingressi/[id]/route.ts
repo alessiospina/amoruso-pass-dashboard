@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getIngressoService } from '@/container/ingresso.container'
 import { validateUpdateIngresso, validateId } from '@/validation/ingresso.validation'
+import { withAuth, AuthenticatedUser } from '@/middleware/auth.middleware'
 
-// GET - Ottieni singolo ingresso
-export async function GET(
+// GET - Ottieni singolo ingresso (PROTETTO)
+export const GET = withAuth(async (
   request: NextRequest,
+  user: AuthenticatedUser,
   { params }: { params: { id: string } }
-) {
+) => {
   try {
+    console.log(`[API] GET /ingressi/${params.id} - Utente autenticato: ${user.email}`)
+
     // Validazione ID
     const idResult = validateId({ id: params.id })
     
@@ -40,14 +44,17 @@ export async function GET(
       { status: 500 }
     )
   }
-}
+})
 
-// PUT - Aggiorna ingresso
-export async function PUT(
+// PUT - Aggiorna ingresso (PROTETTO)
+export const PUT = withAuth(async (
   request: NextRequest,
+  user: AuthenticatedUser,
   { params }: { params: { id: string } }
-) {
+) => {
   try {
+    console.log(`[API] PUT /ingressi/${params.id} - Utente autenticato: ${user.email}`)
+
     // Validazione ID
     const idResult = validateId({ id: params.id })
     
@@ -96,6 +103,7 @@ export async function PUT(
       validationResult.data
     )
     
+    console.log(`[API] Ingresso aggiornato con successo da ${user.email}: ID ${ingresso.id}`)
     return NextResponse.json(ingresso)
   } catch (error) {
     console.error('Errore PUT /api/ingressi/[id]:', error)
@@ -112,14 +120,17 @@ export async function PUT(
       { status: 500 }
     )
   }
-}
+})
 
-// DELETE - Elimina ingresso
-export async function DELETE(
+// DELETE - Elimina ingresso (PROTETTO)
+export const DELETE = withAuth(async (
   request: NextRequest,
+  user: AuthenticatedUser,
   { params }: { params: { id: string } }
-) {
+) => {
   try {
+    console.log(`[API] DELETE /ingressi/${params.id} - Utente autenticato: ${user.email}`)
+
     // Validazione ID
     const idResult = validateId({ id: params.id })
     
@@ -136,6 +147,7 @@ export async function DELETE(
     const service = getIngressoService()
     await service.deleteIngresso(idResult.data.id)
     
+    console.log(`[API] Ingresso eliminato con successo da ${user.email}: ID ${params.id}`)
     return NextResponse.json(
       { message: 'Ingresso eliminato con successo' },
       { status: 200 }
@@ -155,4 +167,4 @@ export async function DELETE(
       { status: 500 }
     )
   }
-}
+})

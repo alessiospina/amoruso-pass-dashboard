@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getEmailService } from '@/container/email.container'
 import { validateUpdateEmail, validateEmailId } from '@/validation/email.validation'
+import { withAuth, AuthenticatedUser } from '@/middleware/auth.middleware'
 
-// GET - Ottieni singolo template email
-export async function GET(
+// GET - Ottieni singolo template email (PROTETTO)
+export const GET = withAuth(async (
   request: NextRequest,
+  user: AuthenticatedUser,
   { params }: { params: { id: string } }
-) {
+) => {
   try {
+    console.log(`[API] GET /emails/${params.id} - Utente autenticato: ${user.email}`)
+
     // Validazione ID
     const idResult = validateEmailId({ id: params.id })
     
@@ -40,14 +44,17 @@ export async function GET(
       { status: 500 }
     )
   }
-}
+})
 
-// PUT - Aggiorna template email
-export async function PUT(
+// PUT - Aggiorna template email (PROTETTO)
+export const PUT = withAuth(async (
   request: NextRequest,
+  user: AuthenticatedUser,
   { params }: { params: { id: string } }
-) {
+) => {
   try {
+    console.log(`[API] PUT /emails/${params.id} - Utente autenticato: ${user.email}`)
+
     // Validazione ID
     const idResult = validateEmailId({ id: params.id })
     
@@ -96,6 +103,7 @@ export async function PUT(
       validationResult.data
     )
     
+    console.log(`[API] Email template aggiornato con successo da ${user.email}: ID ${email.id}`)
     return NextResponse.json(email)
   } catch (error) {
     console.error('Errore PUT /api/emails/[id]:', error)
@@ -112,14 +120,17 @@ export async function PUT(
       { status: 500 }
     )
   }
-}
+})
 
-// DELETE - Elimina template email
-export async function DELETE(
+// DELETE - Elimina template email (PROTETTO)
+export const DELETE = withAuth(async (
   request: NextRequest,
+  user: AuthenticatedUser,
   { params }: { params: { id: string } }
-) {
+) => {
   try {
+    console.log(`[API] DELETE /emails/${params.id} - Utente autenticato: ${user.email}`)
+
     // Validazione ID
     const idResult = validateEmailId({ id: params.id })
     
@@ -136,6 +147,7 @@ export async function DELETE(
     const service = getEmailService()
     await service.deleteEmail(idResult.data.id)
     
+    console.log(`[API] Email template eliminato con successo da ${user.email}: ID ${params.id}`)
     return NextResponse.json(
       { message: 'Template email eliminato con successo' },
       { status: 200 }
@@ -155,4 +167,4 @@ export async function DELETE(
       { status: 500 }
     )
   }
-}
+})

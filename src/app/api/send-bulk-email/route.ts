@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getEmailNotificationService } from '@/container/email.container'
 import { getIngressoService } from '@/container/ingresso.container'
 import { validateSendBulkEmail } from '@/validation/email.validation'
+import { withAuth, AuthenticatedUser } from '@/middleware/auth.middleware'
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
+    console.log(`[API] POST /send-bulk-email - Utente autenticato: ${user.email}`)
+
     const body = await request.json()
     const validation = validateSendBulkEmail(body)
     
@@ -28,12 +31,16 @@ export async function POST(request: NextRequest) {
       validatedData.ingressoIds.map(id => ingressoService.getIngressoById(id))
     )
 
+    console.log(`[API] Invio bulk email da ${user.email}: ${ingressi.length} destinatari, template ${validatedData.templateId}`)
+
     // Invia le email usando il servizio di notifica
     const results = await emailNotificationService.sendBulkNotifications(
       ingressi,
       validatedData.templateId,
       validatedData.ccEmails
     )
+
+    console.log(`[API] Bulk email completato da ${user.email}: ${results.sent} successo, ${results.failed} fallite`)
 
     return NextResponse.json({
       success: true,
@@ -57,4 +64,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

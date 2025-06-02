@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getIngressoService } from '@/container/ingresso.container'
 import { prisma } from '@/lib/prisma'
+import { withAuth, AuthenticatedUser } from '@/middleware/auth.middleware'
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
+    console.log(`[API] GET /suggestions/indirizzo - Utente autenticato: ${user.email}`)
+
     const { searchParams } = new URL(request.url)
     const query = searchParams.get('q')
     const limit = parseInt(searchParams.get('limit') || '10')
@@ -32,4 +35,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getIngressoService } from '@/container/ingresso.container'
 import { validateSearch } from '@/validation/ingresso.validation'
+import { withAuth, AuthenticatedUser } from '@/middleware/auth.middleware'
 
-// GET - Ricerca ingressi
-export async function GET(request: NextRequest) {
+// GET - Ricerca ingressi (PROTETTO)
+export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
+    console.log(`[API] GET /ingressi/search - Utente autenticato: ${user.email}`)
+
     const { searchParams } = new URL(request.url)
     
     // Validazione parametri ricerca
@@ -41,4 +44,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

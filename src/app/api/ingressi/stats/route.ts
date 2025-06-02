@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getIngressoService } from '@/container/ingresso.container'
+import { withAuth, AuthenticatedUser } from '@/middleware/auth.middleware'
 
-// GET - Statistiche ingressi
-export async function GET(request: NextRequest) {
+// GET - Statistiche ingressi (PROTETTO)
+export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
+    console.log(`[API] GET /ingressi/stats - Utente autenticato: ${user.email}`)
+
     const { searchParams } = new URL(request.url)
     const period = searchParams.get('period') ?? '30' // Default 30 giorni
 
@@ -62,4 +65,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

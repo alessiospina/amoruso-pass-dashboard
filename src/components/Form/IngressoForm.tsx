@@ -7,6 +7,7 @@ import { faSave, faTrash, faCheck } from '@fortawesome/free-solid-svg-icons'
 import { validateCreateIngresso } from '@/validation/ingresso.validation'
 import { CreateIngressoDTO } from '@/dto/ingresso.dto'
 import AutocompleteInput from '@/components/UI/AutocompleteInput'
+import { apiGet, apiPost } from '@/utils/api.utils'
 
 interface FieldError {
   message: string
@@ -40,94 +41,76 @@ export default function IngressoForm({ onSuccess, onError }: IngressoFormProps) 
   // Funzioni per fetch dei suggerimenti
   const fetchEmailSuggestions = async (query: string): Promise<string[]> => {
     try {
-      const response = await fetch(`/api/suggestions/email?q=${encodeURIComponent(query)}&limit=10`)
-      if (response.ok) {
-        return await response.json()
-      }
+      return await apiGet<string[]>(`/api/suggestions/email?q=${encodeURIComponent(query)}&limit=10`)
     } catch (error) {
       console.error('Errore caricamento suggerimenti email:', error)
+      return []
     }
-    return []
   }
 
   const fetchRagioneSocialeSuggestions = async (query: string): Promise<string[]> => {
     try {
-      const response = await fetch(`/api/suggestions/ragione-sociale?q=${encodeURIComponent(query)}&limit=10`)
-      if (response.ok) {
-        return await response.json()
-      }
+      return await apiGet<string[]>(`/api/suggestions/ragione-sociale?q=${encodeURIComponent(query)}&limit=10`)
     } catch (error) {
       console.error('Errore caricamento suggerimenti ragione sociale:', error)
+      return []
     }
-    return []
   }
 
   const fetchTargaSuggestions = async (query: string): Promise<string[]> => {
     try {
-      const response = await fetch(`/api/suggestions/targa?q=${encodeURIComponent(query)}&limit=10`)
-      if (response.ok) {
-        return await response.json()
-      }
+      return await apiGet<string[]>(`/api/suggestions/targa?q=${encodeURIComponent(query)}&limit=10`)
     } catch (error) {
       console.error('Errore caricamento suggerimenti targa:', error)
+      return []
     }
-    return []
   }
 
   const fetchPartitaIvaSuggestions = async (query: string): Promise<string[]> => {
     try {
-      const response = await fetch(`/api/suggestions/partita-iva?q=${encodeURIComponent(query)}&limit=10`)
-      if (response.ok) {
-        return await response.json()
-      }
+      return await apiGet<string[]>(`/api/suggestions/partita-iva?q=${encodeURIComponent(query)}&limit=10`)
     } catch (error) {
       console.error('Errore caricamento suggerimenti partita IVA:', error)
+      return []
     }
-    return []
   }
 
   const fetchIndirizzoSuggestions = async (query: string): Promise<string[]> => {
     try {
-      const response = await fetch(`/api/suggestions/indirizzo?q=${encodeURIComponent(query)}&limit=10`)
-      if (response.ok) {
-        return await response.json()
-      }
+      return await apiGet<string[]>(`/api/suggestions/indirizzo?q=${encodeURIComponent(query)}&limit=10`)
     } catch (error) {
       console.error('Errore caricamento suggerimenti indirizzo:', error)
+      return []
     }
-    return []
   }
 
   // Funzione per caricare dati correlati
   const loadCorrelatedData = async (field: string, value: string) => {
     try {
-      const response = await fetch(`/api/suggestions/correlations?field=${field}&value=${encodeURIComponent(value)}`)
-      if (response.ok) {
-        const correlations = await response.json()
+      const correlations = await apiGet<any>(`/api/suggestions/correlations?field=${field}&value=${encodeURIComponent(value)}`)
+      
+      // Aggiorna i campi correlati solo se sono vuoti
+      setFormData(prev => {
+        const updates: Partial<CreateIngressoDTO> = {}
         
-        // Aggiorna i campi correlati solo se sono vuoti
-        setFormData(prev => {
-          const updates: Partial<CreateIngressoDTO> = {}
-          
-          if (!prev.email && correlations.email) {
-            updates.email = correlations.email
-          }
-          if (!prev.ragione_sociale && correlations.ragione_sociale) {
-            updates.ragione_sociale = correlations.ragione_sociale
-          }
-          if (!prev.targa && correlations.targa) {
-            updates.targa = correlations.targa
-          }
-          if (!prev.partita_iva && correlations.partita_iva) {
-            updates.partita_iva = correlations.partita_iva
-          }
-          if (!prev.indirizzo && correlations.indirizzo) {
-            updates.indirizzo = correlations.indirizzo
-          }
-          
-          return { ...prev, ...updates }
-        })
-      }
+        if (!prev.email && correlations.email) {
+          updates.email = correlations.email
+        }
+        if (!prev.ragione_sociale && correlations.ragione_sociale) {
+          updates.ragione_sociale = correlations.ragione_sociale
+        }
+        if (!prev.targa && correlations.targa) {
+          updates.targa = correlations.targa
+        }
+        if (!prev.partita_iva && correlations.partita_iva) {
+          updates.partita_iva = correlations.partita_iva
+        }
+        if (!prev.indirizzo && correlations.indirizzo) {
+          updates.indirizzo = correlations.indirizzo
+        }
+        
+        return { ...prev, ...updates }
+      })
     } catch (error) {
       console.error('Errore caricamento dati correlati:', error)
     }
@@ -277,51 +260,7 @@ export default function IngressoForm({ onSuccess, onError }: IngressoFormProps) 
     setError(null)
 
     try {
-      const response = await fetch('/api/ingressi', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        
-        // Gestisce tutti gli errori 4xx che potrebbero contenere dettagli di validazione
-        if (response.status >= 400 && response.status < 500 && errorData.details) {
-          const serverErrors: Record<string, FieldError> = {}
-          
-          // Gestisce il formato degli errori Zod formattati con .format() (status 400)
-          if (typeof errorData.details === 'object' && !Array.isArray(errorData.details)) {
-            Object.entries(errorData.details).forEach(([field, fieldData]: [string, any]) => {
-              // Gli errori Zod formattati hanno la struttura { _errors: ["messaggio"] }
-              if (fieldData && fieldData._errors && Array.isArray(fieldData._errors) && fieldData._errors.length > 0) {
-                serverErrors[field] = {
-                  message: fieldData._errors[0],
-                  isValid: false
-                }
-              }
-            })
-          }
-          // Gestisce gli errori di business rules (status 422) che sono un array di stringhe
-          else if (Array.isArray(errorData.details)) {
-            // Per ora mostriamo tutti gli errori di business come errore generale
-            // In futuro si potrebbe mappare gli errori specifici ai campi
-            const businessErrorMessage = errorData.details.join(', ')
-            throw new Error(businessErrorMessage)
-          }
-          
-          if (Object.keys(serverErrors).length > 0) {
-            setFieldErrors(serverErrors)
-            // Marca tutti i campi con errori come toccati per mostrarli
-            setTouchedFields(prev => new Set([...Array.from(prev), ...Object.keys(serverErrors)]))
-            return
-          }
-        }
-        
-        throw new Error(errorData.error || 'Errore durante la creazione')
-      }
+      await apiPost('/api/ingressi', formData)
 
       setShowSuccessToast(true)
       handleClear()

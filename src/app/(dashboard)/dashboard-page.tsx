@@ -13,6 +13,7 @@ import {
   faBuilding
 } from '@fortawesome/free-solid-svg-icons'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
+import { apiGet } from '@/utils/api.utils'
 
 interface DashboardStats {
   overview: {
@@ -53,14 +54,7 @@ export default function DashboardPage() {
       setLoading(true)
       setError(null)
 
-      const response = await fetch('/api/ingressi/stats')
-      
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error ?? 'Errore nel caricamento delle statistiche')
-      }
-
-      const data = await response.json()
+      const data = await apiGet<DashboardStats>('/api/ingressi/stats')
       console.log('Dashboard stats data:', data)
       setStats(data)
     } catch (err) {

@@ -6,10 +6,13 @@ import {
   validateIngressoFilters, 
   validatePagination 
 } from '@/validation/ingresso.validation'
+import { withAuth, AuthenticatedUser } from '@/middleware/auth.middleware'
 
-// GET - Lista ingressi con filtri e paginazione
-export async function GET(request: NextRequest) {
+// GET - Lista ingressi con filtri e paginazione (PROTETTO)
+export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
+    console.log(`[API] GET /ingressi - Utente autenticato: ${user.email}`)
+
     const { searchParams } = new URL(request.url)
     
     // Valida paginazione
@@ -67,11 +70,13 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
-// POST - Crea nuovo ingresso
-export async function POST(request: NextRequest) {
+// POST - Crea nuovo ingresso (PROTETTO)
+export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
+    console.log(`[API] POST /ingressi - Utente autenticato: ${user.email}`)
+
     const body = await request.json()
     
     // Validazione input
@@ -123,6 +128,7 @@ export async function POST(request: NextRequest) {
       console.error('Errore nell\'invio email automatico:', emailError)
     }
 
+    console.log(`[API] Ingresso creato con successo da ${user.email}: ID ${ingresso.id}`)
     return NextResponse.json(ingresso, { status: 201 })
   } catch (error) {
     console.error('Errore POST /api/ingressi:', error)
@@ -131,4 +137,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

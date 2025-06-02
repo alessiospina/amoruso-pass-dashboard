@@ -5,10 +5,13 @@ import {
   validateEmailFilters, 
 } from '@/validation/email.validation'
 import { validatePagination } from '@/validation/ingresso.validation'
+import { withAuth, AuthenticatedUser } from '@/middleware/auth.middleware'
 
-// GET - Lista email templates con filtri e paginazione
-export async function GET(request: NextRequest) {
+// GET - Lista email templates con filtri e paginazione (PROTETTO)
+export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
+    console.log(`[API] GET /emails - Utente autenticato: ${user.email}`)
+
     const { searchParams } = new URL(request.url)
     
     // Valida paginazione
@@ -60,11 +63,13 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
-// POST - Crea nuovo template email
-export async function POST(request: NextRequest) {
+// POST - Crea nuovo template email (PROTETTO)
+export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
+    console.log(`[API] POST /emails - Utente autenticato: ${user.email}`)
+
     const body = await request.json()
     
     // Validazione input
@@ -97,6 +102,7 @@ export async function POST(request: NextRequest) {
 
     const email = await service.createEmail(validationResult.data)
 
+    console.log(`[API] Email template creato con successo da ${user.email}: ID ${email.id}`)
     return NextResponse.json(email, { status: 201 })
   } catch (error) {
     console.error('Errore POST /api/emails:', error)
@@ -105,4 +111,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
