@@ -24,7 +24,6 @@ export default function IngressoForm({ onSuccess, onError }: IngressoFormProps) 
   const [error, setError] = useState<string | null>(null)
   const [showSuccessToast, setShowSuccessToast] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Record<string, FieldError>>({})
-  const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set())
   const [importoDisplayValue, setImportoDisplayValue] = useState<string>('')
 
   const initialData: CreateIngressoDTO = {
@@ -118,58 +117,60 @@ export default function IngressoForm({ onSuccess, onError }: IngressoFormProps) 
 
   // Funzione per aggiornare un campo
   const updateField = (name: keyof CreateIngressoDTO, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+    console.log(`🔄 Updating field "${name}" with value:`, value)
+    setFormData(prev => {
+      const updated = {
+        ...prev,
+        [name]: value
+      }
+      console.log(`📊 Updated formData:`, updated)
+      return updated
+    })
   }
 
-  // Funzione per validare un campo specifico
-  const validateField = (name: keyof CreateIngressoDTO) => {
+  // Funzione per validare tutto il form e mostrare errori
+  const validateAllAndShowErrors = () => {
+    console.log('🔍 Validating form data:', formData)
+    
     const result = validateCreateIngresso(formData)
+    console.log('📝 Validation result:', result)
+    
     if (!result.success) {
-      const fieldError = result.error.issues.find(issue => 
-        issue.path.includes(name as string)
-      )
+      console.log('❌ Validation failed, errors:', result.error.issues)
       
-      if (fieldError) {
-        setFieldErrors(prev => ({
-          ...prev,
-          [name]: { message: fieldError.message, isValid: false }
-        }))
-        return false
-      }
+      // Crea un oggetto con tutti gli errori
+      const errors: Record<string, FieldError> = {}
+      
+      result.error.issues.forEach(issue => {
+        const fieldName = issue.path[0] as string
+        console.log(`🚫 Field error - ${fieldName}: ${issue.message}`)
+        errors[fieldName] = {
+          message: issue.message,
+          isValid: false
+        }
+      })
+      
+      setFieldErrors(errors)
+      return false
     }
     
-    setFieldErrors(prev => ({
-      ...prev,
-      [name]: { message: '', isValid: true }
-    }))
+    console.log('✅ Validation passed')
+    // Se tutto è valido, pulisci eventuali errori
+    setFieldErrors({})
     return true
-  }
-
-  // Funzione per validare tutto il form
-  const validateAll = () => {
-    const result = validateCreateIngresso(formData)
-    return result.success
   }
 
   // Reset del form
   const resetForm = () => {
     setFormData(initialData)
     setFieldErrors({})
-    setTouchedFields(new Set())
+    setImportoDisplayValue('')
   }
 
-  // Mark field as touched
-  const markFieldTouched = (name: keyof CreateIngressoDTO) => {
-    setTouchedFields(prev => new Set([...Array.from(prev), name as string]))
-  }
-
-  // Check if should show error
+  // Check if should show error (sempre mostra se presente)
   const shouldShowError = (fieldName: string) => {
     const serverError = fieldErrors[fieldName]
-    return touchedFields.has(fieldName) && serverError && !serverError.isValid
+    return serverError && !serverError.isValid
   }
 
   // Get error message
@@ -178,7 +179,7 @@ export default function IngressoForm({ onSuccess, onError }: IngressoFormProps) 
     return serverError && !serverError.isValid ? serverError.message : ''
   }
 
-  // Calcola se il form è valido
+  // Calcola se il form è valido (solo per riferimento, non blocca l'UI)
   const isFormValid = () => {
     const result = validateCreateIngresso(formData)
     return result.success
@@ -199,6 +200,8 @@ export default function IngressoForm({ onSuccess, onError }: IngressoFormProps) 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
+    console.log(`📝 Input change - ${name}: "${value}"`)
+    
     let processedValue: string | number = value
     
     if (name === 'importo') {
@@ -206,18 +209,20 @@ export default function IngressoForm({ onSuccess, onError }: IngressoFormProps) 
       setImportoDisplayValue(value)
       // Aggiorna formData con il valore numerico grezzo per la validazione
       const numValue = parseFloat(value.replace(',', '.')) || 0
+      console.log(`💰 Importo processed: "${value}" -> ${numValue}`)
       updateField('importo' as keyof CreateIngressoDTO, numValue)
     } else {
-      // Per gli altri campi, il valore è già processato dal componente AutocompleteInput
+      // Per gli altri campi, aggiorna sempre il valore nel form
+      console.log(`📄 Field "${name}" updated with: "${processedValue}"`)
       updateField(name as keyof CreateIngressoDTO, processedValue)
     }
 
-    // Se il campo è già stato toccato, valida in tempo reale
-    if (touchedFields.has(name)) {
-      // Usa setTimeout per permettere al state di aggiornarsi
-      setTimeout(() => {
-        validateField(name as keyof CreateIngressoDTO)
-      }, 0)
+    // Rimuovi eventuali errori del campo quando l'utente inizia a digitare
+    if (fieldErrors[name] && !fieldErrors[name].isValid) {
+      setFieldErrors(prev => ({
+        ...prev,
+        [name]: { message: '', isValid: true }
+      }))
     }
   }
 
@@ -230,29 +235,26 @@ export default function IngressoForm({ onSuccess, onError }: IngressoFormProps) 
       updateField('importo' as keyof CreateIngressoDTO, formattedPrice)
       // Aggiorna anche il valore di display con il formato corretto
       setImportoDisplayValue(formattedPrice === 0 ? '' : formattedPrice.toFixed(2))
+    } else {
+      // Per gli altri campi, assicurati che il valore sia aggiornato
+      updateField(name as keyof CreateIngressoDTO, value)
     }
     
-    setTouchedFields(prev => new Set(prev).add(name))
-    markFieldTouched(name as keyof CreateIngressoDTO)
-    
-    // Valida il campo dopo un breve delay per assicurarci che lo state sia aggiornato
-    setTimeout(() => {
-      validateField(name as keyof CreateIngressoDTO)
-    }, 50)
+    // Non fare validazione al blur - solo al submit
   }
 
   const handleClear = () => {
     resetForm()
     setError(null)
-    setFieldErrors({})
-    setTouchedFields(new Set())
-    setImportoDisplayValue('')
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!validateAll()) {
+    // Valida tutto il form e mostra gli errori
+    if (!validateAllAndShowErrors()) {
+      // Se ci sono errori, non continuare con il submit
+      setError('Correggi gli errori evidenziati nei campi prima di salvare.')
       return
     }
     
@@ -303,7 +305,7 @@ export default function IngressoForm({ onSuccess, onError }: IngressoFormProps) 
                   required
                   disabled={loading}
                   isInvalid={shouldShowError('email')}
-                  helpText={shouldShowError('email') ? getErrorMessage('email') : undefined}
+                  helpText={shouldShowError('email') ? getErrorMessage('email') : "Suggerimenti disponibili durante la digitazione"}
                   fetchSuggestions={fetchEmailSuggestions}
                   minQueryLength={2}
                   maxSuggestions={8}
@@ -322,7 +324,7 @@ export default function IngressoForm({ onSuccess, onError }: IngressoFormProps) 
                   required
                   disabled={loading}
                   isInvalid={shouldShowError('ragione_sociale')}
-                  helpText={shouldShowError('ragione_sociale') ? getErrorMessage('ragione_sociale') : undefined}
+                  helpText={shouldShowError('ragione_sociale') ? getErrorMessage('ragione_sociale') : "Suggerimenti disponibili durante la digitazione"}
                   fetchSuggestions={fetchRagioneSocialeSuggestions}
                   minQueryLength={2}
                   maxSuggestions={8}
@@ -347,7 +349,11 @@ export default function IngressoForm({ onSuccess, onError }: IngressoFormProps) 
                   helpText={shouldShowError('targa') ? getErrorMessage('targa') : "La targa verrà automaticamente convertita in maiuscolo"}
                   style={{ textTransform: 'uppercase' }}
                   fetchSuggestions={fetchTargaSuggestions}
-                  formatValue={(value) => value.toUpperCase().replace(/\s/g, '')}
+                  formatValue={(value) => {
+                    const formatted = value.toUpperCase().replace(/\s/g, '')
+                    console.log(`🔄 Formatting targa: "${value}" -> "${formatted}"`)
+                    return formatted
+                  }}
                   minQueryLength={1}
                   maxSuggestions={10}
                 />
@@ -390,7 +396,7 @@ export default function IngressoForm({ onSuccess, onError }: IngressoFormProps) 
                   disabled={loading}
                   maxLength={500}
                   isInvalid={shouldShowError('indirizzo')}
-                  helpText={shouldShowError('indirizzo') ? getErrorMessage('indirizzo') : "Massimo 500 caratteri"}
+                  helpText={shouldShowError('indirizzo') ? getErrorMessage('indirizzo') : "Suggerimenti disponibili durante la digitazione. Max 500 caratteri"}
                   fetchSuggestions={fetchIndirizzoSuggestions}
                   minQueryLength={3}
                   maxSuggestions={8}
@@ -430,7 +436,7 @@ export default function IngressoForm({ onSuccess, onError }: IngressoFormProps) 
                 type="submit"
                 variant="primary"
                 size="lg"
-                disabled={loading || !isFormValid()}
+                disabled={loading}
                 className="d-flex align-items-center justify-content-center"
               >
                 <FontAwesomeIcon icon={faSave} className="me-2" />

@@ -80,11 +80,14 @@ export default function AutocompleteInput({
         setLoading(true)
         const results = await fetchSuggestions(query)
         const limitedResults = results.slice(0, maxSuggestions)
+        
+        // Mostra sempre i suggerimenti se disponibili, ma non bloccare i valori custom
         setSuggestions(limitedResults)
         setShowSuggestions(limitedResults.length > 0)
         setSelectedIndex(-1)
       } catch (error) {
         console.error('Errore nel caricamento suggerimenti:', error)
+        // Non mostrare errori all'utente, i suggerimenti sono opzionali
         setSuggestions([])
         setShowSuggestions(false)
       } finally {
@@ -113,8 +116,17 @@ export default function AutocompleteInput({
       }
     }
     
+    // Sempre propagare il change event, indipendentemente dai suggerimenti
     onChange(formattedEvent)
-    debouncedFetchSuggestions(newValue)
+    
+    // Fetch suggerimenti solo se il valore è abbastanza lungo
+    if (newValue.length >= minQueryLength) {
+      debouncedFetchSuggestions(newValue)
+    } else {
+      setSuggestions([])
+      setShowSuggestions(false)
+      setSelectedIndex(-1)
+    }
   }
 
   // Gestisce la selezione di un suggerimento
@@ -141,7 +153,14 @@ export default function AutocompleteInput({
 
   // Gestisce la navigazione con le frecce
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!showSuggestions || suggestions.length === 0) return
+    if (!showSuggestions || suggestions.length === 0) {
+      // Se non ci sono suggerimenti, l'Enter dovrebbe comportarsi normalmente
+      if (e.key === 'Enter') {
+        // Lascio che il form gestisca l'Enter
+        return
+      }
+      return
+    }
 
     switch (e.key) {
       case 'ArrowDown':
@@ -162,6 +181,10 @@ export default function AutocompleteInput({
         e.preventDefault()
         if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
           handleSuggestionSelect(suggestions[selectedIndex])
+        } else {
+          // Se non c'è una selezione ma ci sono suggerimenti, chiudi semplicemente la lista
+          setShowSuggestions(false)
+          setSelectedIndex(-1)
         }
         break
       
@@ -182,6 +205,21 @@ export default function AutocompleteInput({
       setShowSuggestions(false)
       setSelectedIndex(-1)
     }, 150)
+    
+    // Assicurarsi che il valore finale sia sincronizzato
+    const finalValue = formatValue ? formatValue(e.target.value) : e.target.value
+    if (finalValue !== localValue) {
+      setLocalValue(finalValue)
+      // Propaga il valore finale se diverso
+      const syntheticEvent = {
+        ...e,
+        target: {
+          ...e.target,
+          value: finalValue
+        }
+      }
+      onChange(syntheticEvent as React.ChangeEvent<HTMLInputElement>)
+    }
     
     onBlur(e)
   }

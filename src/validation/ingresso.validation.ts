@@ -19,7 +19,7 @@ const baseIngressoSchema = z.object({
     .string()
     .min(1, 'Targa è obbligatoria')
     .max(10, 'Targa troppo lunga')
-    .regex(/^[A-Z0-9]+$/, 'Targa deve contenere solo lettere maiuscole e numeri')
+    .regex(/^[A-Z]{2}[0-9]{3}[A-Z]{2}$/, 'Targa deve seguire il formato italiano: 2 lettere, 3 numeri, 2 lettere (es. AB123CD)')
     .transform(val => val.toUpperCase()),
   
   partita_iva: z
@@ -67,7 +67,7 @@ export const updateIngressoSchema = z.object({
     .string()
     .min(1, 'Targa è obbligatoria')
     .max(10, 'Targa troppo lunga')
-    .regex(/^[A-Z0-9]+$/, 'Targa deve contenere solo lettere maiuscole e numeri')
+    .regex(/^[A-Z]{2}[0-9]{3}[A-Z]{2}$/, 'Targa deve seguire il formato italiano: 2 lettere, 3 numeri, 2 lettere (es. AB123CD)')
     .transform(val => val.toUpperCase())
     .optional(),
   
