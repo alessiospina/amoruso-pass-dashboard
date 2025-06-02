@@ -323,7 +323,7 @@ export default function DashboardPage() {
         {/* Grafico Andamento Giornaliero */}
         <Col xs={12} lg={8} className="mb-3">
           <Card className="shadow-sm border-0">
-            <Card.Header className="bg-white border-bottom">
+            <Card.Header className="border-bottom">
               <div className="d-flex align-items-center">
                 <FontAwesomeIcon icon={faChartLine} className="me-2 text-primary" />
                 <strong>Andamento Ultimi 30 Giorni</strong>
@@ -376,7 +376,7 @@ export default function DashboardPage() {
         {/* Top Targhe */}
         <Col xs={12} lg={6} className="mb-3">
           <Card className="shadow-sm border-0">
-            <Card.Header className="bg-white border-bottom">
+            <Card.Header className="border-bottom">
               <div className="d-flex align-items-center">
                 <FontAwesomeIcon icon={faCar} className="me-2 text-secondary" />
                 <strong>Targhe Più Frequenti</strong>
@@ -412,7 +412,7 @@ export default function DashboardPage() {
         {/* Top Ragioni Sociali */}
         <Col xs={12} lg={6} className="mb-3">
           <Card className="shadow-sm border-0">
-            <Card.Header className="bg-white border-bottom">
+            <Card.Header className="border-bottom">
               <div className="d-flex align-items-center">
                 <FontAwesomeIcon icon={faBuilding} className="me-2 text-success" />
                 <strong>Ragioni Sociali Più Frequenti</strong>
@@ -458,7 +458,7 @@ export default function DashboardPage() {
         {/* Grafico Andamento Mensile */}
         <Col xs={12} lg={8} className="mb-3">
           <Card className="shadow-sm border-0">
-            <Card.Header className="bg-white border-bottom">
+            <Card.Header className="border-bottom">
               <div className="d-flex align-items-center">
                 <FontAwesomeIcon icon={faCalendarAlt} className="me-2 text-info" />
                 <strong>Andamento Mensile</strong>
@@ -491,7 +491,7 @@ export default function DashboardPage() {
         {/* Attività Recente */}
         <Col xs={12} lg={4} className="mb-3">
           <Card className="shadow-sm border-0">
-            <Card.Header className="bg-white border-bottom">
+            <Card.Header className="border-bottom">
               <div className="d-flex align-items-center">
                 <FontAwesomeIcon icon={faGauge} className="me-2 text-primary" />
                 <strong>Attività Recente</strong>

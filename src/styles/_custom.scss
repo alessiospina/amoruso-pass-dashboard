@@ -10,6 +10,13 @@
   .dark\:bg-dark {
     @extend .bg-dark;
   }
+
+  // Fix per gli header delle card in dark mode
+  .card-header {
+    background-color: var(--#{$prefix}dark) !important;
+    border-color: var(--#{$prefix}border-color) !important;
+    color: var(--#{$prefix}body-color) !important;
+  }
 }
 
 // Animazioni
