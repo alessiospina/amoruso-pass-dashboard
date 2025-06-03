@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Solo l'applicazione Next.js
   app:

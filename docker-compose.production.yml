@@ -1,0 +1,40 @@
+services:
+  # Applicazione Next.js
+  app:
+    image: localhost:5000/amorusopassdashboard:${APP_VERSION:-latest}
+    container_name: amoruso-pass-app
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+    volumes:
+      # Mount per i log (opzionale)
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - amoruso-network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: amoruso-pass-nginx
+    restart: unless-stopped
+    ports:
+      - "0.0.0.0:8000:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - app
+    networks:
+      - amoruso-network
+
+networks:
+  amoruso-network:
+    driver: bridge
+
+volumes:
+  logs:

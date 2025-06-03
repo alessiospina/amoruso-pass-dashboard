@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
-import { EmailContainer } from '@/container/email.container'
+import { emailContainer } from '@/container/email.container'
 
 export async function GET() {
   try {
-    const emailService = EmailContainer.getEmailService()
+    const emailService = emailContainer.getEmailService()
     
     // Ottieni tutti i template per calcolare le statistiche
     const result = await emailService.getEmails({}, { page: 1, limit: 1000 })

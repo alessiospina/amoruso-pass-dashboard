@@ -19,8 +19,11 @@ RUN pnpm install
 # Copia tutto il codice
 COPY . .
 
-# Copia file env
-COPY .env.production .env.local
+# Argomento per il file env
+ARG ENV_FILE=.env.production
+
+# Copia file env specificato
+COPY ${ENV_FILE} .env.local
 
 # Genera Prisma client
 RUN npx prisma generate
@@ -28,8 +31,12 @@ RUN npx prisma generate
 # Build dell'app
 RUN pnpm build
 
+# Copia file statici per standalone
+RUN cp -r .next/static .next/standalone/.next/
+RUN cp -r public .next/standalone/
+
 # Esponi porta
 EXPOSE 3000
 
-# Avvia l'applicazione
-CMD ["pnpm", "start"]
+# Avvia l'applicazione in modalità standalone
+CMD ["node", ".next/standalone/server.js"]
