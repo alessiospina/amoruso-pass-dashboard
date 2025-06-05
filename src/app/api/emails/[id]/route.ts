@@ -3,6 +3,8 @@ import { getEmailService } from '@/container/email.container'
 import { validateUpdateEmail, validateEmailId } from '@/validation/email.validation'
 import { withAuth, AuthenticatedUser } from '@/middleware/auth.middleware'
 
+export const dynamic = 'force-dynamic'
+
 // GET - Ottieni singolo template email (PROTETTO)
 export const GET = withAuth(async (
   request: NextRequest,

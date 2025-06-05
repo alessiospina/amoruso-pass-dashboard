@@ -3,6 +3,8 @@ import { getIngressoService } from '@/container/ingresso.container'
 import { prisma } from '@/lib/prisma'
 import { withAuth, AuthenticatedUser } from '@/middleware/auth.middleware'
 
+export const dynamic = 'force-dynamic'
+
 export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     console.log(`[API] GET /suggestions/email - Utente autenticato: ${user.email}`)

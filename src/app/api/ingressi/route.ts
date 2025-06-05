@@ -8,6 +8,8 @@ import {
 } from '@/validation/ingresso.validation'
 import { withAuth, AuthenticatedUser } from '@/middleware/auth.middleware'
 
+export const dynamic = 'force-dynamic'
+
 // GET - Lista ingressi con filtri e paginazione (PROTETTO)
 export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {

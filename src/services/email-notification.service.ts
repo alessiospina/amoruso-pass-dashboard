@@ -83,6 +83,13 @@ export class EmailNotificationService {
   // ==================== CONFIGURAZIONE E VERIFICA ====================
 
   /**
+   * Verifica la configurazione email
+   */
+  async verifyEmailConfiguration(): Promise<EmailNotificationStatus> {
+    return this.testEmailConfiguration()
+  }
+
+  /**
    * Testa l'invio di una email
    */
   async testEmailConfiguration(): Promise<EmailNotificationStatus> {

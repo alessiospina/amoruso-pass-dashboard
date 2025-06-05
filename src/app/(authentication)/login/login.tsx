@@ -106,7 +106,7 @@ export default function Login({ callbackUrl }: { callbackUrl: string }) {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder={dict.login.form.email || 'Email'}
+            placeholder={'Email'}
             disabled={submitting}
             onKeyPress={handleKeyPress}
           />

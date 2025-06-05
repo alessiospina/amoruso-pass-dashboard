@@ -3,6 +3,8 @@ import { getIngressoService } from '@/container/ingresso.container'
 import { validateUpdateIngresso, validateId } from '@/validation/ingresso.validation'
 import { withAuth, AuthenticatedUser } from '@/middleware/auth.middleware'
 
+export const dynamic = 'force-dynamic'
+
 // GET - Ottieni singolo ingresso (PROTETTO)
 export const GET = withAuth(async (
   request: NextRequest,

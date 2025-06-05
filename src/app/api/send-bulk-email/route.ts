@@ -4,6 +4,8 @@ import { getIngressoService } from '@/container/ingresso.container'
 import { validateSendBulkEmail } from '@/validation/email.validation'
 import { withAuth, AuthenticatedUser } from '@/middleware/auth.middleware'
 
+export const dynamic = 'force-dynamic'
+
 export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     console.log(`[API] POST /send-bulk-email - Utente autenticato: ${user.email}`)

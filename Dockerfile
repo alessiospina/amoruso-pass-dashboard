@@ -1,4 +1,4 @@
-# Dockerfile semplificato per sviluppo locale
+# Dockerfile per modalità development
 FROM node:18-alpine
 
 # Installa dipendenze necessarie
@@ -19,24 +19,11 @@ RUN pnpm install
 # Copia tutto il codice
 COPY . .
 
-# Argomento per il file env
-ARG ENV_FILE=.env.production
-
-# Copia file env specificato
-COPY ${ENV_FILE} .env.local
-
 # Genera Prisma client
 RUN npx prisma generate
 
-# Build dell'app
-RUN pnpm build
+# Esponi porta 8000
+EXPOSE 8000
 
-# Copia file statici per standalone
-RUN cp -r .next/static .next/standalone/.next/
-RUN cp -r public .next/standalone/
-
-# Esponi porta
-EXPOSE 3000
-
-# Avvia l'applicazione in modalità standalone
-CMD ["node", ".next/standalone/server.js"]
+# Avvia l'applicazione in modalità development
+CMD ["pnpm", "dev", "--hostname", "0.0.0.0", "--port", "8000"]

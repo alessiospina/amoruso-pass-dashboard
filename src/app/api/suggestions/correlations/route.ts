@@ -3,6 +3,8 @@ import { getIngressoService } from '@/container/ingresso.container'
 import { prisma } from '@/lib/prisma'
 import { withAuth, AuthenticatedUser } from '@/middleware/auth.middleware'
 
+export const dynamic = 'force-dynamic'
+
 interface CorrelationData {
   email?: string
   ragione_sociale?: string
