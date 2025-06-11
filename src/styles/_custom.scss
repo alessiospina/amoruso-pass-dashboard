@@ -17,6 +17,60 @@
     border-color: var(--#{$prefix}border-color) !important;
     color: var(--#{$prefix}body-color) !important;
   }
+
+  // Stili per la modale PDF in dark mode
+  .modal-pdf-generator {
+    .modal-content {
+      background-color: var(--#{$prefix}dark);
+      border-color: var(--#{$prefix}border-color);
+    }
+
+    .modal-header {
+      border-bottom-color: var(--#{$prefix}border-color);
+    }
+
+    .modal-footer {
+      border-top-color: var(--#{$prefix}border-color);
+    }
+  }
+
+  // Alert migliorati in dark mode
+  .alert-info {
+    background-color: rgba(13, 202, 240, 0.1);
+    border-color: rgba(13, 202, 240, 0.2);
+    color: var(--#{$prefix}info-text-emphasis);
+  }
+
+  // Cards con bordi colorati in dark mode
+  .border-primary,
+  .border-secondary,
+  .border-info,
+  .border-warning,
+  .border-success {
+    border-color: var(--#{$prefix}border-color) !important;
+    
+    &.border-3 {
+      border-width: 3px !important;
+    }
+  }
+
+  // Badge migliorati per dark mode
+  .badge {
+    &.bg-primary {
+      background-color: var(--#{$prefix}primary) !important;
+    }
+    
+    &.bg-info {
+      background-color: var(--#{$prefix}info) !important;
+    }
+  }
+
+  // Footer in dark mode
+  .footer {
+    .text-dark {
+      color: var(--#{$prefix}body-color) !important;
+    }
+  }
 }
 
 // Animazioni
@@ -38,6 +92,58 @@
 
 .fadeIn {
   animation-name: fadeIn;
+}
+
+// Stili per il generatore PDF
+.ingresso-pdf-generator {
+  .btn {
+    transition: all 0.2s ease-in-out;
+    
+    &:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+    
+    &.btn-success {
+      background: linear-gradient(135deg, #198754 0%, #20c997 100%);
+      border: none;
+      
+      &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #157347 0%, #1aa179 100%);
+      }
+    }
+    
+    &.btn-outline-info {
+      border-width: 2px;
+      font-weight: 500;
+      
+      &:hover:not(:disabled) {
+        background: var(--#{$prefix}info);
+        border-color: var(--#{$prefix}info);
+        color: #fff;
+      }
+    }
+  }
+}
+
+// Miglioramenti per le card moderne
+.card {
+  transition: box-shadow 0.2s ease-in-out;
+  
+  &.shadow-sm:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  }
+}
+
+// Stili per gli elementi con bordi colorati
+.border-start {
+  &.border-3 {
+    border-left-width: 3px !important;
+  }
 }
 
 // Stili per i campi di input con errori

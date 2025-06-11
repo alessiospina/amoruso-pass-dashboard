@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from 'react'
 import { Card, Table, Row, Col, Spinner, Alert, Button, Form, Modal, Toast, ToastContainer } from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEye, faChevronLeft, faChevronRight, faTrash, faEdit, faCheck, faEnvelope } from '@fortawesome/free-solid-svg-icons'
+import { faEye, faChevronLeft, faChevronRight, faTrash, faEdit, faCheck, faEnvelope, faFilePdf } from '@fortawesome/free-solid-svg-icons'
 import { validateCreateIngresso } from '@/validation/ingresso.validation'
+import IngressoPDFGenerator from '@/components/PDF/IngressoPDFGenerator'
 
 interface Ingresso {
   id: string
@@ -61,6 +62,11 @@ export default function VisualizzaIngressiPage() {
   const [showEmailConfirmModal, setShowEmailConfirmModal] = useState(false)
   const [updatedIngressoForEmail, setUpdatedIngressoForEmail] = useState<Ingresso | null>(null)
   const [emailSending, setEmailSending] = useState(false)
+  
+  // Nuovi stati per la modale PDF
+  const [showPdfModal, setShowPdfModal] = useState(false)
+  const [selectedIngressoForPdf, setSelectedIngressoForPdf] = useState<Ingresso | null>(null)
+  const [pdfGenerating, setPdfGenerating] = useState(false)
 
   const fetchIngressi = async (page: number = 1, pageLimit: number = 10) => {
     try {
@@ -369,6 +375,19 @@ export default function VisualizzaIngressiPage() {
     setShowEditSuccessToast(true)
   }
 
+  // Funzioni per gestire il PDF
+  const handleShowPdf = (ingresso: Ingresso) => {
+    setSelectedIngressoForPdf(ingresso)
+    setShowPdfModal(true)
+  }
+
+  const handleClosePdfModal = () => {
+    if (!pdfGenerating) {
+      setShowPdfModal(false)
+      setSelectedIngressoForPdf(null)
+    }
+  }
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('it-IT', {
       day: '2-digit',
@@ -458,7 +477,7 @@ export default function VisualizzaIngressiPage() {
                               <th>Indirizzo</th>
                               <th>Importo</th>
                               <th>Data Creazione</th>
-                              <th style={{ width: '120px' }}>Azioni</th>
+                              <th style={{ width: '150px' }}>Azioni</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -489,6 +508,15 @@ export default function VisualizzaIngressiPage() {
                                 </td>
                                 <td>
                                   <div className="d-flex gap-1">
+                                    <Button
+                                      variant="outline-success"
+                                      size="sm"
+                                      disabled={deletingId === ingresso.id}
+                                      onClick={() => handleShowPdf(ingresso)}
+                                      title="Genera PDF"
+                                    >
+                                      <FontAwesomeIcon icon={faFilePdf} />
+                                    </Button>
                                     <Button
                                       variant="outline-primary"
                                       size="sm"
@@ -862,6 +890,137 @@ export default function VisualizzaIngressiPage() {
                 Sì, invia email
               </>
             )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modale PDF - Compatibile con Dark Mode */}
+      <Modal 
+        show={showPdfModal} 
+        onHide={handleClosePdfModal} 
+        size="lg"
+        backdrop={pdfGenerating ? 'static' : true}
+        keyboard={!pdfGenerating}
+        className="modal-pdf-generator"
+        data-bs-theme="auto"
+      >
+        <Modal.Header closeButton={!pdfGenerating} className="border-bottom">
+          <Modal.Title className="d-flex align-items-center">
+            <FontAwesomeIcon icon={faFilePdf} className="me-2 text-success" />
+            <span>Documento PDF - Ingresso Pass</span>
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-4">
+          {selectedIngressoForPdf && (
+            <div>
+              <div className="text-center mb-4">
+                <div className="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 rounded-circle p-3 mb-3">
+                  <FontAwesomeIcon icon={faFilePdf} size="2x" className="text-success" />
+                </div>
+                <h5 className="mb-2 text-body">Genera PDF per l'ingresso</h5>
+                <p className="text-body-secondary mb-0">
+                  Scarica o stampa il documento PDF dell'ingresso con tutti i dettagli
+                </p>
+              </div>
+              
+              {/* Anteprima dati - Card moderna */}
+              <div className="card border shadow-sm mb-4">
+                <div className="card-header bg-body-tertiary border-bottom">
+                  <h6 className="card-title mb-0 d-flex align-items-center">
+                    <FontAwesomeIcon icon={faEye} className="me-2 text-primary" />
+                    Anteprima dati che saranno inclusi nel PDF:
+                  </h6>
+                </div>
+                <div className="card-body">
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <div className="border-start border-primary border-3 ps-3 mb-3">
+                        <small className="text-body-secondary d-block mb-1">Ragione Sociale:</small>
+                        <strong className="text-body">{selectedIngressoForPdf.ragione_sociale}</strong>
+                      </div>
+                      <div className="border-start border-secondary border-3 ps-3 mb-3">
+                        <small className="text-body-secondary d-block mb-1">Email:</small>
+                        <strong className="text-body">{selectedIngressoForPdf.email}</strong>
+                      </div>
+                      <div className="border-start border-info border-3 ps-3">
+                        <small className="text-body-secondary d-block mb-1">Targa:</small>
+                        <span className="badge bg-primary fs-6">{selectedIngressoForPdf.targa}</span>
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="border-start border-warning border-3 ps-3 mb-3">
+                        <small className="text-body-secondary d-block mb-1">Partita IVA:</small>
+                        <span className="badge bg-info fs-6">{selectedIngressoForPdf.partita_iva}</span>
+                      </div>
+                      <div className="border-start border-success border-3 ps-3 mb-3">
+                        <small className="text-body-secondary d-block mb-1">Importo:</small>
+                        <strong className="text-success fs-5">{formatImporto(selectedIngressoForPdf.importo)}</strong>
+                      </div>
+                      <div className="border-start border-secondary border-3 ps-3">
+                        <small className="text-body-secondary d-block mb-1">Data Creazione:</small>
+                        <strong className="text-body">{formatDate(selectedIngressoForPdf.created_at)}</strong>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-3 border-top">
+                    <small className="text-body-secondary d-block mb-1">Indirizzo completo:</small>
+                    <strong className="text-body">{selectedIngressoForPdf.indirizzo}</strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Controlli PDF - Sezione migliorata */}
+              <div className="text-center">
+                <div className="card border-0 bg-body-secondary bg-opacity-25">
+                  <div className="card-body p-4">
+                    <h6 className="card-title text-body mb-3">Azioni disponibili</h6>
+                    <div className="d-inline-flex gap-3 align-items-center">
+                      <IngressoPDFGenerator 
+                        ingresso={selectedIngressoForPdf}
+                        onGenerating={setPdfGenerating}
+                      />
+                    </div>
+                    
+                    {pdfGenerating && (
+                      <div className="mt-3 p-3 bg-warning bg-opacity-10 border border-warning rounded">
+                        <div className="d-flex align-items-center justify-content-center">
+                          <Spinner animation="border" size="sm" className="me-2 text-warning" />
+                          <span className="text-body-emphasis fw-medium">Generazione PDF in corso...</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Alert informativo moderno */}
+              <div className="alert alert-info d-flex align-items-start mt-4" role="alert">
+                <div className="flex-shrink-0 me-3">
+                  <FontAwesomeIcon icon={faFilePdf} className="text-info" />
+                </div>
+                <div className="flex-grow-1">
+                  <h6 className="alert-heading mb-2">Informazioni sul documento</h6>
+                  <ul className="mb-0 ps-3">
+                    <li className="mb-1">Il PDF conterrà tutti i dettagli dell'ingresso in formato ufficiale</li>
+                    <li className="mb-1">Il documento includerà l'intestazione "SalernoCruises - Nuovo Ingresso (PASS)"</li>
+                    <li className="mb-0">Nome file: <code className="text-info">SalernoCruises_Ingresso_{selectedIngressoForPdf.targa}_{new Date().toISOString().split('T')[0]}.pdf</code></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer className="border-top d-flex justify-content-between align-items-center">
+          <small className="text-body-secondary">
+            Powered by <strong className="text-primary">CoreUI UI Components</strong>
+          </small>
+          <Button 
+            variant="outline-secondary" 
+            onClick={handleClosePdfModal}
+            disabled={pdfGenerating}
+            className="px-4"
+          >
+            <span>Chiudi</span>
           </Button>
         </Modal.Footer>
       </Modal>
