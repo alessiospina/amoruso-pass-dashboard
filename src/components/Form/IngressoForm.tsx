@@ -24,7 +24,6 @@ export default function IngressoForm({ onSuccess, onError }: IngressoFormProps) 
   const [error, setError] = useState<string | null>(null)
   const [showSuccessToast, setShowSuccessToast] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Record<string, FieldError>>({})
-  const [importoDisplayValue, setImportoDisplayValue] = useState<string>('')
 
   const initialData: CreateIngressoDTO = {
     email: '',
@@ -164,7 +163,6 @@ export default function IngressoForm({ onSuccess, onError }: IngressoFormProps) 
   const resetForm = () => {
     setFormData(initialData)
     setFieldErrors({})
-    setImportoDisplayValue('')
   }
 
   // Check if should show error (sempre mostra se presente)
@@ -185,31 +183,16 @@ export default function IngressoForm({ onSuccess, onError }: IngressoFormProps) 
     return result.success
   }
 
-  // Funzione per formattare il prezzo
-  const formatPrice = (value: string): number => {
-    // Sostituisce la virgola con il punto
-    const normalizedValue = value.replace(',', '.')
-    // Rimuove tutti i caratteri non numerici eccetto il punto
-    const cleanValue = normalizedValue.replace(/[^\d.]/g, '')
-    // Converte a numero
-    const numValue = parseFloat(cleanValue)
-    
-    if (isNaN(numValue)) return 0
-    return Math.round(numValue * 100) / 100
-  }
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     console.log(`📝 Input change - ${name}: "${value}"`)
     
     let processedValue: string | number = value
     
     if (name === 'importo') {
-      // Salva il valore grezzo per il display
-      setImportoDisplayValue(value)
-      // Aggiorna formData con il valore numerico grezzo per la validazione
-      const numValue = parseFloat(value.replace(',', '.')) || 0
-      console.log(`💰 Importo processed: "${value}" -> ${numValue}`)
+      // Converte la stringa selezionata in numero
+      const numValue = parseFloat(value) || 0
+      console.log(`💰 Importo selected: "${value}" -> ${numValue}`)
       updateField('importo' as keyof CreateIngressoDTO, numValue)
     } else {
       // Per gli altri campi, aggiorna sempre il valore nel form
@@ -229,16 +212,8 @@ export default function IngressoForm({ onSuccess, onError }: IngressoFormProps) 
   const handleFieldBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     
-    // Formatta il prezzo solo quando il campo perde il focus
-    if (name === 'importo') {
-      const formattedPrice = formatPrice(value)
-      updateField('importo' as keyof CreateIngressoDTO, formattedPrice)
-      // Aggiorna anche il valore di display con il formato corretto
-      setImportoDisplayValue(formattedPrice === 0 ? '' : formattedPrice.toFixed(2))
-    } else {
-      // Per gli altri campi, assicurati che il valore sia aggiornato
-      updateField(name as keyof CreateIngressoDTO, value)
-    }
+    // Per tutti i campi, assicurati che il valore sia aggiornato
+    updateField(name as keyof CreateIngressoDTO, value)
     
     // Non fare validazione al blur - solo al submit
   }
@@ -255,11 +230,18 @@ export default function IngressoForm({ onSuccess, onError }: IngressoFormProps) 
     if (!validateAllAndShowErrors()) {
       // Se ci sono errori, non continuare con il submit
       setError('Correggi gli errori evidenziati nei campi prima di salvare.')
+      // Porta la pagina in cima per mostrare l'errore
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }, 100)
       return
     }
     
     setLoading(true)
     setError(null)
+
+    // Porta la pagina in cima durante il caricamento
+    window.scrollTo({ top: 0, behavior: 'smooth' })
 
     try {
       await apiPost('/api/ingressi', formData)
@@ -267,10 +249,14 @@ export default function IngressoForm({ onSuccess, onError }: IngressoFormProps) 
       setShowSuccessToast(true)
       handleClear()
       onSuccess?.()
+      // Assicurati che rimanga in cima dopo il successo
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Errore imprevisto'
       setError(errorMessage)
       onError?.(errorMessage)
+      // Porta in cima per mostrare l'errore
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     } finally {
       setLoading(false)
     }
@@ -285,7 +271,7 @@ export default function IngressoForm({ onSuccess, onError }: IngressoFormProps) 
         </Card.Header>
         <Card.Body className="p-3 p-md-4">
           {error && (
-            <Alert variant="danger" dismissible onClose={() => setError(null)}>
+            <Alert variant="danger" dismissible onClose={() => setError(null)} className="fw-bold text-white bg-danger border-danger">
               {error}
             </Alert>  
           )}
@@ -408,24 +394,25 @@ export default function IngressoForm({ onSuccess, onError }: IngressoFormProps) 
               <Col xs={12} lg={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Importo (€) *</Form.Label>
-                  <Form.Control
-                    type="text"
+                  <Form.Select
                     name="importo"
-                    value={importoDisplayValue}
+                    value={formData.importo.toString()}
                     onChange={handleInputChange}
-                    onBlur={handleFieldBlur}
-                    placeholder="0.00"
                     size="lg"
                     required
                     disabled={loading}
                     isInvalid={shouldShowError('importo')}
                     className={shouldShowError('importo') ? 'border-danger' : ''}
-                  />
+                  >
+                    <option value="0">Seleziona importo</option>
+                    <option value="10">10 euro</option>
+                    <option value="15">15 euro</option>
+                  </Form.Select>
                   <Form.Control.Feedback type="invalid">
                     {getErrorMessage('importo')}
                   </Form.Control.Feedback>
                   <Form.Text className="text-muted">
-                    Inserisci l'importo con decimali (es. 10.50)
+                    Seleziona l'importo da applicare
                   </Form.Text>
                 </Form.Group>
               </Col>
@@ -471,12 +458,13 @@ export default function IngressoForm({ onSuccess, onError }: IngressoFormProps) 
           delay={4000}
           autohide
           bg="success"
+          className="text-white fw-bold"
         >
-          <Toast.Header closeButton={false}>
+          <Toast.Header closeButton={false} className="bg-success text-white fw-bold border-0">
             <FontAwesomeIcon icon={faCheck} className="me-2" />
             <strong className="me-auto">Successo!</strong>
           </Toast.Header>
-          <Toast.Body>
+          <Toast.Body className="fw-bold">
             Ingresso creato con successo!
           </Toast.Body>
         </Toast>

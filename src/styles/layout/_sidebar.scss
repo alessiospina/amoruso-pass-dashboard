@@ -96,6 +96,17 @@ $sidebar-overlay-z-index: 1025;
       .nav-icon {
         flex: 0 0 4rem;
       }
+
+      // Aumenta dimensioni dei bottoni su mobile
+      @include media-breakpoint-down(md) {
+        padding: 1rem 1.5rem !important;
+        font-size: 1.1rem;
+        
+        .nav-icon {
+          font-size: 1.3rem;
+          flex: 0 0 3rem;
+        }
+      }
     }
 
     .nav-group {
