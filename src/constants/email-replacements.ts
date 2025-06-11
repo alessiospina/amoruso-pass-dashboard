@@ -90,6 +90,14 @@ export const EMAIL_REPLACEMENTS: ReplacementDefinition[] = [
  * Mappa i replacement keys ai valori dell'entità Ingresso
  */
 export const getReplacementValue = (key: string, ingresso: Ingresso): string => {
+  const formatDateForEmail = (date: Date): string => {
+    return date.toLocaleDateString('it-IT', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    })
+  }
+
   const replacementMap: Record<string, string> = {
     '$EMAIL$': ingresso.email || 'NOT VALID',
     '$RAGIONE_SOCIALE$': ingresso.ragione_sociale || 'NOT VALID',
@@ -97,8 +105,8 @@ export const getReplacementValue = (key: string, ingresso: Ingresso): string => 
     '$PARTITA_IVA$': ingresso.partita_iva || 'NOT VALID',
     '$INDIRIZZO$': ingresso.indirizzo || 'NOT VALID',
     '$IMPORTO$': ingresso.importo ? `€${ingresso.importo.toFixed(2)}` : 'NOT VALID',
-    '$DATA_CREAZIONE$': ingresso.created_at ? ingresso.created_at.toLocaleDateString('it-IT') : 'NOT VALID',
-    '$DATA_AGGIORNAMENTO$': ingresso.updated_at ? ingresso.updated_at.toLocaleDateString('it-IT') : 'NOT VALID',
+    '$DATA_CREAZIONE$': ingresso.created_at ? formatDateForEmail(ingresso.created_at) : 'NOT VALID',
+    '$DATA_AGGIORNAMENTO$': ingresso.updated_at ? formatDateForEmail(ingresso.updated_at) : 'NOT VALID',
     '$ID$': ingresso.id || 'NOT VALID'
   }
 
