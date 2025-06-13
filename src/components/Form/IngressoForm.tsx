@@ -405,8 +405,8 @@ export default function IngressoForm({ onSuccess, onError }: IngressoFormProps) 
                     className={shouldShowError('importo') ? 'border-danger' : ''}
                   >
                     <option value="0">Seleziona importo</option>
-                    <option value="10">10 euro</option>
                     <option value="15">15 euro</option>
+                    <option value="25">25 euro</option>
                   </Form.Select>
                   <Form.Control.Feedback type="invalid">
                     {getErrorMessage('importo')}
