@@ -49,7 +49,8 @@ export default function VisualizzaIngressiPage() {
     targa: '',
     partita_iva: '',
     indirizzo: '',
-    importo: 0
+    importo: 0,
+    created_at: new Date()
   })
   const [editLoading, setEditLoading] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
@@ -67,6 +68,24 @@ export default function VisualizzaIngressiPage() {
   const [showPdfModal, setShowPdfModal] = useState(false)
   const [selectedIngressoForPdf, setSelectedIngressoForPdf] = useState<Ingresso | null>(null)
   const [pdfGenerating, setPdfGenerating] = useState(false)
+
+  // Helper functions per la gestione delle date (copiato dal form di creazione)
+  const formatDateForInput = (date: Date | string): string => {
+    const d = typeof date === 'string' ? new Date(date) : date
+
+    // Formatta usando il fuso orario locale del browser
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    const hours = String(d.getHours()).padStart(2, '0')
+    const minutes = String(d.getMinutes()).padStart(2, '0')
+
+    return `${year}-${month}-${day}T${hours}:${minutes}`
+  }
+
+  const parseInputDate = (dateString: string): Date => {
+    return new Date(dateString)
+  }
 
   const fetchIngressi = async (page: number = 1, pageLimit: number = 10) => {
     try {
@@ -197,7 +216,8 @@ export default function VisualizzaIngressiPage() {
       targa: ingresso.targa,
       partita_iva: ingresso.partita_iva,
       indirizzo: ingresso.indirizzo,
-      importo: ingresso.importo
+      importo: ingresso.importo,
+      created_at: new Date(ingresso.created_at)
     })
     setEditImportoDisplayValue(ingresso.importo === 0 ? '' : ingresso.importo.toFixed(2))
     setEditError(null)
@@ -213,6 +233,10 @@ export default function VisualizzaIngressiPage() {
       setEditImportoDisplayValue(value)
       const numValue = parseFloat(value.replace(',', '.')) || 0
       setEditFormData(prev => ({ ...prev, importo: numValue }))
+    } else if (name === 'created_at') {
+      // Converte la stringa datetime-local in Date
+      const dateValue = parseInputDate(value)
+      setEditFormData(prev => ({ ...prev, created_at: dateValue }))
     } else if (name === 'targa') {
       const processedValue = value.toUpperCase().replace(/\s/g, '')
       setEditFormData(prev => ({ ...prev, [name]: processedValue }))
@@ -261,7 +285,7 @@ export default function VisualizzaIngressiPage() {
           }
         })
         setEditFieldErrors(newErrors)
-        setEditTouchedFields(new Set(['email', 'ragione_sociale', 'targa', 'partita_iva', 'indirizzo', 'importo']))
+        setEditTouchedFields(new Set(['email', 'ragione_sociale', 'targa', 'partita_iva', 'indirizzo', 'importo', 'created_at']))
       }
       return
     }
@@ -781,6 +805,28 @@ export default function VisualizzaIngressiPage() {
                   </Form.Control.Feedback>
                   <Form.Text className="text-muted">
                     Inserisci l'importo con decimali (es. 10.50)
+                  </Form.Text>
+                </Form.Group>
+              </Col>
+              <Col xs={12} lg={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Data e Ora Ingresso *</Form.Label>
+                  <Form.Control
+                    type="datetime-local"
+                    name="created_at"
+                    value={formatDateForInput(editFormData.created_at)}
+                    onChange={handleEditInputChange}
+                    onBlur={handleEditFieldBlur}
+                    required
+                    disabled={editLoading}
+                    isInvalid={shouldShowEditError('created_at')}
+                    className={shouldShowEditError('created_at') ? 'border-danger' : ''}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {getEditErrorMessage('created_at')}
+                  </Form.Control.Feedback>
+                  <Form.Text className="text-muted">
+                    Data e ora dell'ingresso
                   </Form.Text>
                 </Form.Group>
               </Col>
