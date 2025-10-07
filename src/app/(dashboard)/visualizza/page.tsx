@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from 'react'
 import { Card, Table, Row, Col, Spinner, Alert, Button, Form, Modal, Toast, ToastContainer } from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEye, faChevronLeft, faChevronRight, faTrash, faEdit, faCheck, faEnvelope, faFilePdf } from '@fortawesome/free-solid-svg-icons'
+import { faEye, faChevronLeft, faChevronRight, faTrash, faEdit, faCheck, faEnvelope, faFilePdf, faFileExport } from '@fortawesome/free-solid-svg-icons'
 import { validateCreateIngresso } from '@/validation/ingresso.validation'
 import IngressoPDFGenerator from '@/components/PDF/IngressoPDFGenerator'
+import BulkIngressoPDFGenerator from '@/components/PDF/BulkIngressoPDFGenerator'
 
 interface Ingresso {
   id: string
@@ -68,6 +69,9 @@ export default function VisualizzaIngressiPage() {
   const [showPdfModal, setShowPdfModal] = useState(false)
   const [selectedIngressoForPdf, setSelectedIngressoForPdf] = useState<Ingresso | null>(null)
   const [pdfGenerating, setPdfGenerating] = useState(false)
+
+  // Stati per l'export PDF multiplo
+  const [showBulkPdfModal, setShowBulkPdfModal] = useState(false)
 
   // Helper functions per la gestione delle date (copiato dal form di creazione)
   const formatDateForInput = (date: Date | string): string => {
@@ -458,6 +462,15 @@ export default function VisualizzaIngressiPage() {
               <div className="d-flex align-items-center">
                 <strong>Lista Ingressi</strong>
               </div>
+              <Button
+                variant="light"
+                size="sm"
+                onClick={() => setShowBulkPdfModal(true)}
+                className="d-flex align-items-center gap-2"
+              >
+                <FontAwesomeIcon icon={faFileExport} />
+                <span>Export PDF per Range Date</span>
+              </Button>
             </Card.Header>
             <Card.Body className="p-0">
               {error && (
@@ -1071,14 +1084,51 @@ export default function VisualizzaIngressiPage() {
         </Modal.Footer>
       </Modal>
 
+      {/* Modale Export PDF Multiplo */}
+      <Modal
+        show={showBulkPdfModal}
+        onHide={() => setShowBulkPdfModal(false)}
+        size="lg"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title className="d-flex align-items-center">
+            <FontAwesomeIcon icon={faFileExport} className="me-2 text-primary" />
+            <span>Export PDF per Range Date</span>
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-4">
+          <div className="text-center mb-4">
+            <div className="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 rounded-circle p-3 mb-3">
+              <FontAwesomeIcon icon={faFileExport} size="2x" className="text-primary" />
+            </div>
+            <h5 className="mb-2">Esporta Ingressi in PDF</h5>
+            <p className="text-muted mb-0">
+              Seleziona un intervallo di date per generare un report PDF con tutti gli ingressi registrati nel periodo
+            </p>
+          </div>
+
+          <BulkIngressoPDFGenerator onClose={() => setShowBulkPdfModal(false)} />
+
+          <Alert variant="info" className="mt-4 mb-0">
+            <FontAwesomeIcon icon={faFilePdf} className="me-2" />
+            <strong>Informazioni sul report:</strong>
+            <ul className="mb-0 mt-2 ps-3">
+              <li>Il PDF conterrà una tabella con tutti gli ingressi nel periodo selezionato</li>
+              <li>Le colonne includeranno: Data, Ragione Sociale, Email, Targa, P.IVA, Indirizzo e Importo</li>
+              <li>Il report includerà il totale degli importi</li>
+            </ul>
+          </Alert>
+        </Modal.Body>
+      </Modal>
+
       {/* Toast per successo modifica */}
-      <ToastContainer 
-        position="top-end" 
+      <ToastContainer
+        position="top-end"
         className="p-3"
         style={{ zIndex: 1050 }}
       >
-        <Toast 
-          show={showEditSuccessToast} 
+        <Toast
+          show={showEditSuccessToast}
           onClose={() => setShowEditSuccessToast(false)}
           delay={4000}
           autohide
